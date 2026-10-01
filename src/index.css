@@ -34,7 +34,7 @@ body { background: var(--color-canvas); color: var(--color-ink); font-family: va
   0%, 100% { outline-color: rgb(255 138 61 / 0.9); }
   50% { outline-color: rgb(255 138 61 / 0.2); }
 }
-.agent-point { outline: 3px solid; outline-offset: 6px; border-radius: 14px; animation: point-ring 0.9s ease-in-out 3; }
+.agent-point { outline: 3px solid rgb(255 138 61 / 0.9); outline-offset: 6px; border-radius: 14px; animation: point-ring 0.9s ease-in-out 3; }
 
 @keyframes orb-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
 @keyframes orb-ripple { 0% { transform: scale(1); opacity: 0.55; } 100% { transform: scale(1.9); opacity: 0; } }
