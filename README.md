@@ -14,7 +14,8 @@ Kosh Finance is a fictional lender. No real money, credit checks or KYC happen; 
 
 | Capability | How it shows up |
 |---|---|
-| **Voice conversation** | Streaming speech-to-text (Deepgram Nova-3, `en-IN`), natural replies via Murf TTS (Indian English voice), barge-in (just start talking, or press Esc), echo filtering. Falls back to browser speech APIs if a provider is down. |
+| **Voice conversation** | Streaming speech-to-text (Deepgram Nova-3), natural replies in Murf's **Khyati** voice (Falcon model), barge-in (just start talking, or press Esc), echo filtering. Falls back to browser speech APIs if a provider is down. |
+| **12 languages** | English / Hinglish, Hindi, Bengali, Tamil, Telugu, Marathi, Kannada, Gujarati, Punjabi, Malayalam, Assamese, Odia. Pick one in Riya's panel or just ask ("can we talk in Tamil?"). Riya replies in everyday spoken language in the native script, Khyati speaks it, and speech recognition switches to match. Form values are always captured in English and digits so validation keeps working. |
 | **Conversational intelligence** | Products, rates, tenure, eligibility rules, documents, EMI, approval time, what happens after submission. All answers come from one product catalogue the UI also renders from, so the agent cannot contradict the screen. |
 | **Action Intelligence** | Navigate screens, fill fields from speech ("5 lakh", "3 years", "HDFC", "aarav dot sharma at gmail dot com"), select options, tick checkboxes, press buttons (Continue, Check eligibility, Submit), scroll to and highlight fields/sections, update earlier answers, recover from validation errors. Every action is visible: fields glow as they are filled and an action timeline shows what was done. |
 | **Application context** | Every turn the agent receives the current screen, its fields and their status, what is missing elsewhere, eligibility, and anything the customer did by hand. "What do I enter here?" is answered for the screen you are on. Information already given is never asked for again. |
@@ -56,7 +57,8 @@ Key design decisions:
 | `shared/` | Product catalogue, finance math (EMI, eligibility), schema, agent tools + system prompt |
 | `api/` | Serverless routes (Vercel). Same files serve local dev through a Vite plugin |
 | `src/agent/` | Controller (loop, barge-in, proactive events), tool executor, context builder |
-| `src/voice/` | Deepgram streaming STT + browser fallback, Murf TTS + browser fallback |
+| `src/voice/` | Deepgram streaming STT + browser fallback, Murf TTS + browser fallback, language state |
+| `shared/languages.ts` | Per-language Murf locale, Deepgram model/language and browser fallback locale |
 | `src/revrag/` | RevRag SDK integration and context sync |
 
 ## Run locally
@@ -105,8 +107,7 @@ npx vercel deploy --prod
 | `VITE_REVRAG_API_KEY` | client | RevRag In-App Agent SDK key |
 | `ANTHROPIC_MODEL` | server, optional | Defaults to `claude-opus-5-5` |
 | `AGENT_EFFORT` | server, optional | `low` (default) / `medium` / `high` |
-| `MURF_VOICE_ID`, `MURF_LOCALE` | server, optional | Defaults `en-IN-isha`, `en-IN` |
-| `DEEPGRAM_MODEL`, `DEEPGRAM_LANGUAGE` | server, optional | Defaults `nova-3`, `en-IN` |
+| `MURF_VOICE_ID`, `MURF_MODEL` | server, optional | Defaults `hi-IN-khyati`, `FALCON` |
 
 The **Status** pill in the header shows which providers are live and how many context events have reached RevRag.
 
@@ -114,4 +115,5 @@ The **Status** pill in the header shows which providers are live and how many co
 
 - Browsers do not let scripts open a file picker without a click, so the agent guides the customer to the upload tile instead of uploading for them. A clearly labelled "sample documents" demo action exists for walkthroughs.
 - Voice input is most reliable in Chrome and Edge. Safari and Firefox use Deepgram too, but browser-fallback STT is Chromium-only.
+- Deepgram has no streaming model for Malayalam or Odia, so those two use the browser's speech recognition (best in Google Chrome).
 - The public demo uses the deployer's API keys; set spend limits on each provider.
