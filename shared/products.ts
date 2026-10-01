@@ -1,4 +1,4 @@
-// Loan product catalogue and policy knowledge for "Kosh Finance", a fictional lender used for this demo.
+// Loan product catalogue and policy knowledge for "Bliss Finance", a fictional lender used for this demo.
 // The UI renders from this file and the agent's system prompt is built from it, so both always agree.
 
 export type ProductId = 'personal' | 'home' | 'car' | 'business';

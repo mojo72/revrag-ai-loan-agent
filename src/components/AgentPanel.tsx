@@ -63,35 +63,35 @@ export function AgentPanel() {
     <>
       {/* Mobile launcher */}
       {!panelOpen && (
-        <button type="button" aria-label="Open Riya" onClick={() => (agent.active ? useAgent.setState({ panelOpen: true }) : void agent.start())} className="fixed bottom-5 right-5 z-40 lg:hidden">
+        <button type="button" aria-label="Open Sara" onClick={() => (agent.active ? useAgent.setState({ panelOpen: true }) : void agent.start())} className="fixed bottom-5 right-5 z-40 lg:hidden">
           <Orb status={status} micOn={micOn} size="sm" />
         </button>
       )}
 
       <aside
-        aria-label="Riya, AI relationship manager"
+        aria-label="Sara, AI relationship manager"
         className={`fixed z-40 flex flex-col border-line bg-white shadow-2xl transition-transform lg:inset-y-0 lg:left-auto lg:right-0 lg:w-[400px] lg:translate-y-0 lg:border-l lg:shadow-none ${
           panelOpen ? 'inset-x-0 bottom-0 h-[72dvh] translate-y-0 rounded-t-3xl border-t' : 'inset-x-0 bottom-0 h-[72dvh] translate-y-full'
         } lg:h-auto lg:rounded-none`}
       >
         <div className="flex items-center justify-between border-b border-line px-5 py-4">
           <div className="flex items-center gap-3">
-            <span className="grid size-10 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-900 font-display font-bold text-white">R</span>
+            <span className="grid size-10 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-900 font-display font-bold text-white">S</span>
             <div>
-              <p className="font-semibold leading-tight">Riya</p>
+              <p className="font-semibold leading-tight">Sara</p>
               <p className="text-xs text-muted">AI Relationship Manager{copilot ? ' · RevRag co-pilot mode' : ''}</p>
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <label className="sr-only" htmlFor="riya-language">
+            <label className="sr-only" htmlFor="sara-language">
               Conversation language
             </label>
             <select
-              id="riya-language"
+              id="sara-language"
               value={lang.code}
               onChange={(e) => lang.set(e.target.value)}
               className="max-w-[9.5rem] rounded-lg border border-line bg-canvas px-2 py-1.5 text-xs text-ink outline-none focus:border-brand-500"
-              title="Language Riya speaks and listens in"
+              title="Language Sara speaks and listens in"
             >
               {LANGUAGES.map((l) => (
                 <option key={l.code} value={l.code}>
@@ -113,7 +113,7 @@ export function AgentPanel() {
         <div ref={listRef} className="flex-1 space-y-2.5 overflow-y-auto px-4 py-4">
           {items.length === 0 && (
             <div className="rounded-2xl bg-brand-50 p-4 text-sm text-brand-900">
-              <p className="font-semibold">Hi, I'm Riya.</p>
+              <p className="font-semibold">Hi, I'm Sara.</p>
               <p className="mt-1 text-brand-900/80">
                 I can explain our loans, check your eligibility, and fill the application for you. Tap the orb and talk to me, or type below.
               </p>

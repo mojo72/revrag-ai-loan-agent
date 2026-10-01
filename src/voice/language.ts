@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { languageByCode, type Language } from '../../shared/languages';
 
-const KEY = 'kosh-language';
+const KEY = 'bliss-language';
 
 function initial(): string {
   try {
@@ -11,7 +11,7 @@ function initial(): string {
   }
 }
 
-/** The conversation language. Changed from the panel picker or by Riya via the set_language tool. */
+/** The conversation language. Changed from the panel picker or by Sara via the set_language tool. */
 export const useLanguage = create<{ code: string; set: (code: string) => void }>((set) => ({
   code: initial(),
   set: (code) => {

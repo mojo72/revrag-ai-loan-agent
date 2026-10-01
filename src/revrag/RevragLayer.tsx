@@ -4,7 +4,7 @@
 //   SCREEN_VIEW on navigation, FORM_STATE on edits, CUSTOM_EVENT / ANALYTICS_DATA for milestones
 //   and every action the agent performs.
 // - The RevRag web SDK does not execute UI actions on web (Action Intelligence is mobile-only today),
-//   so while a RevRag call is live, Riya runs as a silent "action co-pilot" that operates the app
+//   so while a RevRag call is live, Sara runs as a silent "action co-pilot" that operates the app
 //   from the same conversation.
 
 import { EmbedProvider, EventKeys, embedEvent, useInitialize } from '@revrag-ai/embed-react';
@@ -31,10 +31,10 @@ export const useRevrag = create<{ configured: boolean; initialized: boolean; err
 
 function userId() {
   try {
-    let id = localStorage.getItem('kosh-user-id');
+    let id = localStorage.getItem('bliss-user-id');
     if (!id) {
       id = 'guest-' + crypto.randomUUID().slice(0, 8);
-      localStorage.setItem('kosh-user-id', id);
+      localStorage.setItem('bliss-user-id', id);
     }
     return id;
   } catch {
@@ -70,7 +70,7 @@ function ContextSync() {
   const initialized = useRevrag((s) => s.initialized);
   useEffect(() => {
     if (!initialized || identified) return;
-    void send(EventKeys.USER_DATA, { name: (useApp.getState().data.full_name as string) ?? 'Guest', channel: 'web', app: 'kosh-loan-demo' }).then(() => {
+    void send(EventKeys.USER_DATA, { name: (useApp.getState().data.full_name as string) ?? 'Guest', channel: 'web', app: 'bliss-loan-demo' }).then(() => {
       identified = true;
     });
   }, [initialized]);
@@ -108,7 +108,7 @@ function ContextSync() {
     [],
   );
 
-  // RevRag call lifecycle -> Riya co-pilot mode.
+  // RevRag call lifecycle -> Sara co-pilot mode.
   useEffect(() => {
     const cb = (event: { type: string }) => {
       if (event.type === EventKeys.AGENT_CONNECTED) {

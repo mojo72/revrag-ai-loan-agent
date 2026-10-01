@@ -1,4 +1,4 @@
-// Languages Riya can converse in. Each entry maps one conversation language to:
+// Languages Sara can converse in. Each entry maps one conversation language to:
 // - the Murf locale Khyati speaks in (Falcon model voices are multilingual),
 // - the Deepgram streaming model/language (null when Deepgram has no streaming support),
 // - the browser speech-recognition locale used as the fallback.

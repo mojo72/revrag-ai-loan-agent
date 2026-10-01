@@ -19,12 +19,12 @@ export function Header() {
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold text-brand-900">
           <img src="/favicon.svg" alt="" className="size-7" />
-          Kosh Finance
+          Bliss Finance
         </Link>
         <div className="flex items-center gap-2">
           <StatusBadge />
           <button type="button" onClick={() => (agent.active ? useAgent.setState({ panelOpen: true }) : agent.start())} className="rounded-full bg-brand-600 px-3.5 py-1.5 text-xs font-semibold text-white lg:hidden">
-            Riya
+            Sara
           </button>
         </div>
       </div>

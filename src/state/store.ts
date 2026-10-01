@@ -83,7 +83,7 @@ export const useApp = create<AppState>()(
       },
 
       submit: () => {
-        const id = 'KF' + Date.now().toString(36).toUpperCase().slice(-6) + Math.floor(Math.random() * 90 + 10);
+        const id = 'BF' + Date.now().toString(36).toUpperCase().slice(-6) + Math.floor(Math.random() * 90 + 10);
         set({ applicationId: id, submittedAt: Date.now() });
         return id;
       },
@@ -99,7 +99,7 @@ export const useApp = create<AppState>()(
         set({ data: initialData, eligibility: null, applicationId: null, submittedAt: null, attempted: {}, agentTouched: {}, manualChanges: [] }),
     }),
     {
-      name: 'kosh-application',
+      name: 'bliss-application',
       storage: createJSONStorage(() => sessionStorage),
       partialize: (s) => ({ data: s.data, eligibility: s.eligibility, applicationId: s.applicationId, submittedAt: s.submittedAt }),
     },

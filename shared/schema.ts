@@ -518,7 +518,7 @@ export const FIELDS: Record<string, FieldDef> = {
   },
   consent_bureau: {
     id: 'consent_bureau',
-    label: 'I authorise Kosh Finance to fetch my credit report from bureaus',
+    label: 'I authorise Bliss Finance to fetch my credit report from bureaus',
     type: 'checkbox',
     required: true,
     help: 'Permission for a credit bureau check. Agent may only tick this after the customer says yes.',

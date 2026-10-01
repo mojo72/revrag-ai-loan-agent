@@ -109,7 +109,7 @@ Correct types, exported documented hooks, CSP-safe bundle, event queueing, React
 
 ## 5. Other observations, assumptions and ideas
 
-- **Assumption:** Kosh Finance products, rates and policies are fictional but realistic for the Indian market.
+- **Assumption:** Bliss Finance products, rates and policies are fictional but realistic for the Indian market.
 - **Echo and barge-in:** with the mic open while the agent speaks, browser echo cancellation is not enough on laptop speakers. I filter transcripts that mostly match what the agent is currently saying; RevRag could do this server-side since it knows its own TTS output.
 - **Latency budget:** voice feels natural only if the first audio starts within about 1.5 to 2 seconds. Sentence-level TTS pipelining (synthesise all sentences in parallel, play the first as soon as it is ready) gave the biggest perceived gain.
 - **Idea:** "Resume where you left off" calls: the agent greets a returning user with the exact step and missing fields, using the same context snapshot.

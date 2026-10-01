@@ -18,8 +18,8 @@ export function DiscoverPage() {
       <section className="relative overflow-hidden rounded-[28px] bg-brand-900 px-6 py-10 text-white shadow-xl sm:px-10">
         <div className="pointer-events-none absolute -right-20 -top-24 size-72 rounded-full bg-brand-500/40 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 left-10 size-64 rounded-full bg-accent/25 blur-3xl" />
-        <p className="relative text-sm font-medium text-brand-200">Kosh Finance · Instant loans</p>
-        <h1 className="relative mt-2 max-w-lg font-display text-4xl font-bold leading-tight sm:text-5xl">Just say what you need. Riya does the paperwork.</h1>
+        <p className="relative text-sm font-medium text-brand-200">Bliss Finance · Instant loans</p>
+        <h1 className="relative mt-2 max-w-lg font-display text-4xl font-bold leading-tight sm:text-5xl">Just say what you need. Sara does the paperwork.</h1>
         <p className="relative mt-3 max-w-md text-brand-100">
           Your AI relationship manager answers questions, checks eligibility, and fills the application for you, by voice.
         </p>
@@ -31,7 +31,7 @@ export function DiscoverPage() {
             className="flex items-center gap-2 rounded-2xl bg-white px-5 py-3 font-semibold text-brand-900 shadow-lg transition hover:bg-brand-50 disabled:opacity-70"
           >
             <span className="grid size-6 place-items-center rounded-full bg-brand-600 text-xs text-white">●</span>
-            {active ? 'Riya is listening' : 'Talk to Riya'}
+            {active ? 'Sara is listening' : 'Talk to Sara'}
           </button>
           <button type="button" onClick={() => goTo('loan')} className="rounded-2xl border border-white/30 px-5 py-3 font-semibold text-white hover:bg-white/10">
             Apply on my own

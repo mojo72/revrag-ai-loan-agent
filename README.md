@@ -1,12 +1,12 @@
-# Kosh Finance · AI Loan Relationship Manager
+# Bliss Finance · AI Loan Relationship Manager
 
-A voice-first AI Relationship Manager ("Riya") that **understands, guides and operates** a loan application end to end. Built for the RevRag AI In-App Agent assignment.
+A voice-first AI Relationship Manager ("Sara") that **understands, guides and operates** a loan application end to end. Built for the RevRag AI In-App Agent assignment.
 
-> Say *"I want a 5 lakh personal loan for 3 years"* and watch Riya pick the product, fill the amount and tenure, tell you what is still missing, check your eligibility, move you through each screen, and submit, by voice.
+> Say *"I want a 5 lakh personal loan for 3 years"* and watch Sara pick the product, fill the amount and tenure, tell you what is still missing, check your eligibility, move you through each screen, and submit, by voice.
 
 **Live app:** https://revrag-ai-loan-agent.vercel.app · **Product feedback:** [docs/PRODUCT_FEEDBACK.md](docs/PRODUCT_FEEDBACK.md) · **Demo script:** [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md)
 
-Kosh Finance is a fictional lender. No real money, credit checks or KYC happen; uploaded files never leave the browser.
+Bliss Finance is a fictional lender. No real money, credit checks or KYC happen; uploaded files never leave the browser.
 
 ---
 
@@ -15,13 +15,13 @@ Kosh Finance is a fictional lender. No real money, credit checks or KYC happen; 
 | Capability | How it shows up |
 |---|---|
 | **Voice conversation** | Streaming speech-to-text (Deepgram Nova-3), natural replies in Murf's **Khyati** voice (Falcon model), barge-in (just start talking, or press Esc), echo filtering. Falls back to browser speech APIs if a provider is down. |
-| **12 languages** | English / Hinglish, Hindi, Bengali, Tamil, Telugu, Marathi, Kannada, Gujarati, Punjabi, Malayalam, Assamese, Odia. Pick one in Riya's panel or just ask ("can we talk in Tamil?"). Riya replies in everyday spoken language in the native script, Khyati speaks it, and speech recognition switches to match. Form values are always captured in English and digits so validation keeps working. |
+| **12 languages** | English / Hinglish, Hindi, Bengali, Tamil, Telugu, Marathi, Kannada, Gujarati, Punjabi, Malayalam, Assamese, Odia. Pick one in Sara's panel or just ask ("can we talk in Tamil?"). Sara replies in everyday spoken language in the native script, Khyati speaks it, and speech recognition switches to match. Form values are always captured in English and digits so validation keeps working. |
 | **Conversational intelligence** | Products, rates, tenure, eligibility rules, documents, EMI, approval time, what happens after submission. All answers come from one product catalogue the UI also renders from, so the agent cannot contradict the screen. |
 | **Action Intelligence** | Navigate screens, fill fields from speech ("5 lakh", "3 years", "HDFC", "aarav dot sharma at gmail dot com"), select options, tick checkboxes, press buttons (Continue, Check eligibility, Submit), scroll to and highlight fields/sections, update earlier answers, recover from validation errors. Every action is visible: fields glow as they are filled and an action timeline shows what was done. |
 | **Application context** | Every turn the agent receives the current screen, its fields and their status, what is missing elsewhere, eligibility, and anything the customer did by hand. "What do I enter here?" is answered for the screen you are on. Information already given is never asked for again. |
 | **Proactive help** | If the customer clicks Continue and validation fails, or runs eligibility themselves, the agent reacts without being asked. |
 | **Guardrails** | Consents are only ticked after an explicit spoken "yes"; submission needs confirmation; the agent cannot skip the same gates a human faces (eligibility, required fields); sensitive values are masked on screen. |
-| **RevRag In-App Agent** | RevRag widget embedded with route-aware `EmbedProvider`; user identity and live application context are streamed to RevRag (`USER_DATA`, `SCREEN_VIEW`, `FORM_STATE`, `CUSTOM_EVENT`, `ANALYTICS_DATA`). When a RevRag voice call is live, Riya switches to **co-pilot mode**: RevRag does the talking, Riya silently operates the app from the same conversation. |
+| **RevRag In-App Agent** | RevRag widget embedded with route-aware `EmbedProvider`; user identity and live application context are streamed to RevRag (`USER_DATA`, `SCREEN_VIEW`, `FORM_STATE`, `CUSTOM_EVENT`, `ANALYTICS_DATA`). When a RevRag voice call is live, Sara switches to **co-pilot mode**: RevRag does the talking, Sara silently operates the app from the same conversation. |
 
 ## The journey
 

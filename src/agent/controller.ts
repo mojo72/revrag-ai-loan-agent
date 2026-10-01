@@ -86,7 +86,7 @@ class AgentController {
       this.refreshStatus(speaking);
     };
     this.speaker.locale = currentLanguage().murfLocale;
-    // Switching language (picker or Riya's set_language tool) retunes both ears and voice.
+    // Switching language (picker or Sara's set_language tool) retunes both ears and voice.
     useLanguage.subscribe((state, prev) => {
       if (state.code === prev.code) return;
       const lang = currentLanguage();
@@ -215,23 +215,23 @@ class AgentController {
     if (on) {
       this.speaker.stop();
       if (!this.started) void this.start({ copilot: true });
-      push('event', 'RevRag voice agent connected. Riya is now the silent action co-pilot.');
+      push('event', 'RevRag voice agent connected. Sara is now the silent action co-pilot.');
     } else if (this.started) {
-      push('event', 'RevRag call ended. Riya is back on voice.');
+      push('event', 'RevRag call ended. Sara is back on voice.');
     }
   }
 
   private greet() {
     const lang = currentLanguage();
     if (lang.code !== 'en') {
-      // Let Riya greet in the customer's language rather than a canned English line.
+      // Let Sara greet in the customer's language rather than a canned English line.
       void this.run(`<app_event>Voice session started. Greet the customer warmly in ${lang.label}, introduce yourself as ${AGENT_NAME}, and ask how you can help with their loan.</app_event>`);
       return;
     }
     const step = currentStep();
     const text =
       step === 'discover'
-        ? `Hi, I'm ${AGENT_NAME}, your relationship manager at Kosh Finance. Tell me what you need, like a 5 lakh personal loan for 3 years, and I'll set it all up for you.`
+        ? `Hi, I'm ${AGENT_NAME}, your relationship manager at Bliss Finance. Tell me what you need, like a 5 lakh personal loan for 3 years, and I'll set it all up for you.`
         : step === 'submitted'
           ? `Hi, I'm ${AGENT_NAME}. Your application is submitted. Ask me anything about what happens next.`
           : `Hi, I'm ${AGENT_NAME}. I can see you're on ${STEP_BY_ID[step].title}. Just tell me your details and I'll fill them in, or ask me anything.`;
@@ -347,7 +347,7 @@ class AgentController {
         needsFollowUp ||= failed || informational;
         // A follow-up that only relays a result must not call tools, or its words come back hidden.
         speakOnly = informational && !failed;
-        // Latency: if Riya already said her reply and every action simply succeeded, skip the follow-up
+        // Latency: if Sara already said her reply and every action simply succeeded, skip the follow-up
         // model call. The results are sent with the next user message, so history stays valid.
         if (!needsFollowUp) {
           this.deferred = results;
@@ -385,7 +385,7 @@ class AgentController {
   }
 }
 
-/** Tools whose output Riya has to relay or reason about, so they always need a follow-up model call. */
+/** Tools whose output Sara has to relay or reason about, so they always need a follow-up model call. */
 function returnsInformation(tool: string, input: Record<string, unknown>) {
   if (tool === 'calculate_emi' || tool === 'get_application_state') return true;
   return tool === 'press_button' && ['check_eligibility', 'submit_application', 'start_new_application'].includes(String(input.button));
