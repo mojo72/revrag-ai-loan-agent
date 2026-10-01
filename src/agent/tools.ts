@@ -101,7 +101,8 @@ export async function executeTool(name: string, input: Record<string, unknown>):
       await wait(r.ok ? 350 : 50);
       if (r.ok && button === 'check_eligibility') scrollToTarget('eligibility_result');
       const label = button.replace(/_/g, ' ');
-      return { content: r.message, isError: !r.ok, summary: r.ok ? `Pressed “${label}”` : `“${label}” blocked` };
+      const relay = r.ok && ['check_eligibility', 'submit_application'].includes(button) ? ' Tell the customer this result now, in plain words.' : '';
+      return { content: r.message + relay, isError: !r.ok, summary: r.ok ? `Pressed “${label}”` : `“${label}” blocked` };
     }
 
     case 'scroll_to': {
@@ -126,7 +127,7 @@ export async function executeTool(name: string, input: Record<string, unknown>):
       if (!(amount > 0 && months > 0)) return { content: 'amount and tenure_months must be positive.', isError: true, summary: 'EMI calc failed' };
       const b = emiBreakdown(amount, rate, months);
       return {
-        content: `${PRODUCTS[product].name}: ${formatINR(amount)} for ${months} months at ${rate}% p.a. -> EMI ${formatINR(b.emi)}/month, total interest ${formatINR(b.totalInterest)}, total payable ${formatINR(b.totalPayable)}.${typeof input.annual_rate === 'number' ? '' : ' Rate is indicative based on the declared credit score.'}`,
+        content: `Tell the customer: ${PRODUCTS[product].name}: ${formatINR(amount)} for ${months} months at ${rate}% p.a. -> EMI ${formatINR(b.emi)}/month, total interest ${formatINR(b.totalInterest)}, total payable ${formatINR(b.totalPayable)}.${typeof input.annual_rate === 'number' ? '' : ' Rate is indicative based on the declared credit score.'}`,
         isError: false,
         summary: `EMI ${formatINR(b.emi)}/mo`,
       };
