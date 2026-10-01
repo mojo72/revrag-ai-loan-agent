@@ -9,6 +9,7 @@ while IFS= read -r line || [ -n "$line" ]; do
   name="${line%%=*}"
   value="${line#*=}"
   [ -z "$value" ] && continue
+  [[ "$name" == VERCEL_* ]] && continue
   for target in production preview; do
     npx vercel env rm "$name" "$target" --yes >/dev/null 2>&1 || true
     printf '%s' "$value" | npx vercel env add "$name" "$target" >/dev/null
