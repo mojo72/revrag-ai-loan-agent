@@ -136,7 +136,7 @@ export function AgentPanel() {
               <Orb status={status} micOn={micOn} />
             </button>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium">{status === 'listening' && !micOn ? 'Mic paused · tap to resume' : STATUS_TEXT[status]}</p>
+              <p className="text-sm font-medium">{status === 'listening' && !micOn ? 'Mic off · tap the orb to retry' : STATUS_TEXT[status]}</p>
               <p className="truncate text-xs text-muted">
                 {status === 'off' ? 'Voice works best in Chrome or Edge' : sttProvider ? `Speech: ${sttProvider === 'deepgram' ? 'Deepgram' : 'browser'} · Esc to interrupt` : 'Type to chat'}
               </p>

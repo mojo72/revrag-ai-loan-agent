@@ -6,6 +6,8 @@ export interface SttCallbacks {
   onUtterance: (text: string) => void;
   onSpeechStart?: () => void;
   onError: (message: string) => void;
+  /** Voice input cannot continue (no retry). The app should switch the mic off and suggest typing. */
+  onFatal: (message: string) => void;
 }
 
 export interface Stt {
@@ -44,6 +46,7 @@ export class DeepgramStt implements Stt {
   private active = false;
   private finals: string[] = [];
   private keepAlive?: number;
+  private reconnects = 0;
   private cb: SttCallbacks;
 
   constructor(cb: SttCallbacks) {
@@ -105,9 +108,15 @@ export class DeepgramStt implements Stt {
       ws.onopen = () => resolve();
       ws.onerror = () => reject(new Error('Speech service connection failed'));
     });
+    this.reconnects = 0;
     ws.onmessage = (e) => this.onMessage(JSON.parse(e.data as string));
     ws.onclose = () => {
-      if (this.ws === ws && this.active) setTimeout(() => this.active && this.connect().catch((err) => this.cb.onError(String(err))), 500);
+      if (this.ws !== ws || !this.active) return;
+      if (++this.reconnects > 3) {
+        this.active = false;
+        return this.cb.onFatal('Lost the connection to the speech service. You can keep typing to me below.');
+      }
+      setTimeout(() => this.active && this.connect().catch(() => ws.onclose?.(new CloseEvent('close'))), 500 * this.reconnects);
     };
     clearInterval(this.keepAlive);
     this.keepAlive = window.setInterval(() => ws.readyState === WebSocket.OPEN && ws.send(JSON.stringify({ type: 'KeepAlive' })), 8000);
@@ -193,8 +202,32 @@ export class BrowserStt implements Stt {
       }
       if (interim) this.cb.onInterim(interim);
     };
-    rec.onerror = (e) => e.error !== 'no-speech' && e.error !== 'aborted' && this.cb.onError(`Speech recognition error: ${e.error}`);
-    rec.onend = () => this.active && rec.start();
+    // These errors will not fix themselves by restarting (e.g. "network" = the browser cannot reach its
+    // speech service, common outside Google Chrome or behind a VPN). Stop instead of looping.
+    const FATAL: Record<string, string> = {
+      network: "This browser can't reach its speech service. Voice input works best in Google Chrome; you can type to me below.",
+      'not-allowed': 'Microphone permission was denied. You can type to me below.',
+      'service-not-allowed': "This browser doesn't allow speech recognition here. You can type to me below.",
+      'audio-capture': 'No microphone was found. You can type to me below.',
+      'language-not-supported': "This browser doesn't support Indian English speech recognition. You can type to me below.",
+    };
+    let restarts: number[] = [];
+    rec.onerror = (e) => {
+      if (FATAL[e.error]) {
+        this.active = false;
+        this.cb.onFatal(FATAL[e.error]);
+      }
+    };
+    rec.onend = () => {
+      if (!this.active) return;
+      const now = Date.now();
+      restarts = restarts.filter((t) => now - t < 10_000).concat(now);
+      if (restarts.length > 5) {
+        this.active = false;
+        return this.cb.onFatal('Voice input keeps stopping in this browser. You can type to me below.');
+      }
+      rec.start();
+    };
     rec.start();
     this.rec = rec;
   }

@@ -57,7 +57,12 @@ export const useAgent = create<AgentUi>(() => ({
 
 let seq = 0;
 const push = (role: TranscriptItem['role'], text: string, ok?: boolean) =>
-  useAgent.setState((s) => ({ items: [...s.items, { id: ++seq, role, text, ok }].slice(-80) }));
+  useAgent.setState((s) => {
+    const last = s.items[s.items.length - 1];
+    // Never repeat the same notice back-to-back (e.g. a flapping mic).
+    if (last && last.role === role && last.text === text && (role === 'error' || role === 'event')) return s;
+    return { items: [...s.items, { id: ++seq, role, text, ok }].slice(-80) };
+  });
 
 const words = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(Boolean);
 
@@ -132,6 +137,12 @@ class AgentController {
       onInterim: (t: string) => useAgent.setState({ interim: t }),
       onUtterance: (t: string) => this.onUtterance(t),
       onError: (m: string) => push('error', m),
+      onFatal: (m: string) => {
+        this.stt?.stop();
+        this.stt = undefined;
+        useAgent.setState({ micOn: false, interim: '', sttProvider: null });
+        push('error', m);
+      },
     };
     const candidates: Stt[] = [];
     if (p.stt) candidates.push(new DeepgramStt(cb));
