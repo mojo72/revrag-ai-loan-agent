@@ -1,0 +1,49 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Fraunces', Georgia, serif;
+  --color-ink: #1b1530;
+  --color-muted: #6b6585;
+  --color-line: #e7e3f1;
+  --color-canvas: #f7f5fb;
+  --color-brand-50: #f3effd;
+  --color-brand-100: #e6ddfb;
+  --color-brand-200: #cbbcf6;
+  --color-brand-500: #6d4ae0;
+  --color-brand-600: #5a36cf;
+  --color-brand-700: #47289f;
+  --color-brand-900: #2a1760;
+  --color-accent: #ff8a3d;
+  --color-ok: #138a5b;
+  --color-bad: #c2353a;
+}
+
+html { scroll-behavior: smooth; }
+body { background: var(--color-canvas); color: var(--color-ink); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+
+/* Field filled by the agent: brief glow so the customer sees the agent operating the form. */
+@keyframes agent-glow {
+  0% { box-shadow: 0 0 0 0 rgb(109 74 224 / 0.55); background-color: var(--color-brand-50); }
+  70% { box-shadow: 0 0 0 10px rgb(109 74 224 / 0); }
+  100% { box-shadow: 0 0 0 0 rgb(109 74 224 / 0); }
+}
+.agent-glow { animation: agent-glow 1.6s ease-out; }
+
+@keyframes point-ring {
+  0%, 100% { outline-color: rgb(255 138 61 / 0.9); }
+  50% { outline-color: rgb(255 138 61 / 0.2); }
+}
+.agent-point { outline: 3px solid; outline-offset: 6px; border-radius: 14px; animation: point-ring 0.9s ease-in-out 3; }
+
+@keyframes orb-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+@keyframes orb-ripple { 0% { transform: scale(1); opacity: 0.55; } 100% { transform: scale(1.9); opacity: 0; } }
+@keyframes orb-spin { to { transform: rotate(360deg); } }
+.orb-breathe { animation: orb-breathe 2.4s ease-in-out infinite; }
+.orb-ripple { animation: orb-ripple 1.6s ease-out infinite; }
+.orb-spin { animation: orb-spin 1.1s linear infinite; }
+
+@keyframes slide-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.slide-in { animation: slide-in 0.25s ease-out; }
+
+input[type='range'] { accent-color: var(--color-brand-600); }
