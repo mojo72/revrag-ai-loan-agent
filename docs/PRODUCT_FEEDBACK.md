@@ -4,8 +4,8 @@ From building a voice-first loan Relationship Manager on the RevRag **React (web
 
 ## TL;DR
 
-1. **The biggest gap: Action Intelligence does not exist on web.** It is documented for React Native, Flutter and Android only. The React SDK has no way for the agent to see the DOM or act on it, and no way for the host app to register actions the agent can call. The assignment's most important requirement could not be met with RevRag alone on web, so I built an action layer next to it.
-2. **The host app cannot hear the conversation.** There is no transcript or intent callback on web. To let the app act on what was said during a RevRag call, I had to open a second microphone stream with my own STT. That doubles audio cost, risks echo, and splits the "brain" in two.
+1. **The biggest gap: Action Intelligence exists on the platform but not in the web SDK.** My agent's `/initialize` config has `action_config.flags.actionIntelligence: true` (plus highlighting, click tracking and more), and the React Native SDK implements a full protocol for it over the LiveKit data channel. The React SDK (1.4.4) reads none of it. To meet the assignment's most important requirement on RevRag alone, I implemented that mobile protocol for the browser myself (`src/revrag/`), so RevRag's own agent now operates the web app.
+2. **The host app cannot hear the conversation through the SDK.** There is no transcript, agent-state or data-channel callback on web, and the SDK keeps its LiveKit room private. I had to run the call myself (RevRag token + `livekit-client`) to get transcripts, the agent's state, and the data channel. That means re-implementing what the SDK should provide.
 3. **The SDK's developer experience undercuts trust**: TypeScript types resolve to `any`, documented hooks are not exported, useful event keys are undocumented, and there is no self-serve key to try it.
 4. **The foundation is good**: three-line integration, route-aware visibility, a clean event model, and server-side handling of voice infrastructure (LiveKit) are genuinely fast to adopt.
 
@@ -31,6 +31,9 @@ From building a voice-first loan Relationship Manager on the RevRag **React (web
 | **No self-serve API key.** "Contact our team for integration keys." | Docs, Getting Started step 2. | Nobody can evaluate the SDK on their own; for a developer product this is the top-of-funnel. |
 | **Heavy bundle and `eval`.** ~495 KB main + ~424 KB lottie chunk; the lottie chunk uses direct `eval`. | Vite/Rolldown build warning. | Breaks strict CSP (common in BFSI apps, your core market) and costs load time on mobile web. |
 | **Ordering trap.** Events are dropped unless `USER_DATA` was sent first. | Docs troubleshooting. | Easy to lose early events (first screen view). The SDK should queue them until identity arrives. |
+| **The web SDK ignores the agent's Action Intelligence config.** `/embedded-agent/initialize` returns `action_config` (flags, colours, highlight and border effects). | 0 references to any of those keys in the 1.4.4 bundle. | The dashboard lets you enable features that silently do nothing on web. |
+| **`/initialize` echoes the API key in its response body.** | Response field `api_key`. | Harmless for a publishable key, but it ends up in logs and debugging tools; there is no reason to return it. |
+| **Calls run on a staging LiveKit host.** The token response's `server_url` is `wss://stage-livekit.revrag.ai`. | Token response. | Worth confirming production keys never route to staging infrastructure. |
 
 ### SDK / API feedback
 - Ship correct `.d.ts` files and add a CI check that the published package type-checks in a blank project.
@@ -62,7 +65,15 @@ From building a voice-first loan Relationship Manager on the RevRag **React (web
 ### What I needed and could not get from RevRag on web
 Navigate, fill fields, select options, press buttons, scroll/highlight, read validation errors, and verify the action worked. The React Native docs describe exactly this pipeline (UI capture → decide → tap/type/select/scroll → verify), but none of it ships in the React SDK.
 
-### What I built instead (and what it taught me)
+### How I got RevRag's own Action Intelligence working on web
+The React Native SDK (`@revrag-ai/embed-react-native` 1.1.0) contains the protocol in readable form: `ui_snapshot` frames describe the screen; the agent sends `mission`s whose steps name an action (tap, set_text, select, check, set_slider, scroll_to, highlight, read_field, find_candidates, back, wait) and a target (`target_stable_id`, `target_text`, `target_role`...); the client answers with `mission_status`, `mission_phase`, `verification_result` and `info_query_response`. I implemented that for the DOM:
+- **Snapshot:** each form control becomes one semantic node with a stable id from the app schema (`field.amount`, `field.product.personal`, `button.next`), its label, value, checked state and any validation error. A full screen is about 7 KB.
+- **Missions:** targets are resolved against a fresh snapshot; field writes go through the app's own validation; taps are verified by route or screen change; a blocked Continue reports `blocked_by_validation` with the exact missing fields; file uploads report `requires_user_action`.
+- **Tested** with mission messages in RevRag's wire format (product, amount, tenure, purpose, Continue; eligibility fields and check; invalid values; highlights; read-backs).
+
+This shows the protocol is platform-agnostic, as its own code comments claim ("so the backend planner is platform-agnostic"). Shipping it in the React SDK looks like a small step for RevRag and a large one for every web customer.
+
+### What the earlier, Claude-based prototype taught me
 A typed action layer generated from the app's form schema: `navigate_to`, `fill_fields`, `press_button`, `scroll_to`, `calculate_emi`, `get_application_state`. Lessons that apply directly to RevRag's design:
 
 1. **Declared actions beat DOM scraping for forms.** Because the agent's tool enums come from the same schema the UI renders from, it never targets a field that does not exist, and the app normalises "5 lakh", "3 years", "HDFC" or "aarav dot sharma at gmail dot com" into valid values. Inferring this from a DOM/UI tree is much harder and more fragile.
@@ -117,4 +128,4 @@ Correct types, exported documented hooks, CSP-safe bundle, event queueing, React
 
 ## 6. Live-call observations
 
-_To be completed after testing the RevRag agent with the issued API key: latency, voice quality, how well it used the streamed context, and behaviour when the co-pilot acts during the call._
+_To be completed from real voice calls with the RevRag agent: latency, voice quality, whether the planner sends missions to the web client, how well it uses the snapshots, and how it recovers from failed steps._

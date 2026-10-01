@@ -4,7 +4,7 @@ Focus only on the agent and what it does. No architecture or feedback talk. Reco
 
 | Time | You do / say | What the viewer should see |
 |---|---|---|
-| 0:00 | Open the live link. Click **Talk to Sara**. | Sara greets you by voice; orb animates; panel shows transcript. |
+| 0:00 | Open the live link. Click **Talk to Sara** and allow the microphone. | The RevRag voice call connects; Sara greets you; the panel shows the live transcript. |
 | 0:20 | "What kinds of loans do you have?" | Sara lists the four products briefly (voice). |
 | 0:40 | "What's the interest rate on a personal loan, and how long can I take it for?" | Accurate rate range and 12 to 72 months. |
 | 1:00 | **"I want a 5 lakh personal loan for 3 years."** | Sara opens Loan details, product, amount, tenure glow as they fill, she asks for the purpose. |
@@ -22,6 +22,5 @@ Focus only on the agent and what it does. No architecture or feedback talk. Reco
 | 5:20 | "Show me my bank details." | Scrolls to and highlights the bank section of the review. |
 | 5:35 | Sara asks for consents. "Yes, I agree to both." Then "Yes, submit it." | Consents tick, application submits, ID spoken. |
 | 6:00 | "What happens next, and how long will approval take?" | Post-submission steps from the confirmation screen context. |
-| 6:20 | Optional: open the RevRag widget (bottom-left) and start a call; say "set my loan amount to 4 lakh" on a new application. | RevRag agent talks, Sara co-pilot operates the form silently. |
 
-Tips: speak naturally, pause briefly after each request, and press Esc to interrupt Sara if she is mid-sentence.
+Tips: speak naturally and pause briefly after each request; you can talk over Sara to interrupt her. Open the Status pill before recording to confirm the RevRag SDK is initialised; during the call it counts the screen snapshots, missions and actions.

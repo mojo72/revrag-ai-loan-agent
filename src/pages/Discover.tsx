@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { emiBreakdown } from '../../shared/finance';
 import { PRODUCTS, PRODUCT_IDS, formatINR, type ProductId } from '../../shared/products';
-import { agent, useAgent } from '../agent/controller';
+import { call, useCall } from '../revrag/call';
 import { useHighlight } from '../components/useHighlight';
 import { goTo } from '../state/actions';
 import { useApp } from '../state/store';
@@ -10,7 +10,7 @@ const ICON: Record<ProductId, string> = { personal: '◎', home: '⌂', car: '�
 
 export function DiscoverPage() {
   const setField = useApp((s) => s.setField);
-  const active = useAgent((s) => s.status !== 'off');
+  const active = useCall((s) => s.status !== 'off');
   const pointedProducts = useHighlight('products');
 
   return (
@@ -21,17 +21,17 @@ export function DiscoverPage() {
         <p className="relative text-sm font-medium text-brand-200">Bliss Finance · Instant loans</p>
         <h1 className="relative mt-2 max-w-lg font-display text-4xl font-bold leading-tight sm:text-5xl">Just say what you need. Sara does the paperwork.</h1>
         <p className="relative mt-3 max-w-md text-brand-100">
-          Your AI relationship manager answers questions, checks eligibility, and fills the application for you, by voice.
+          Your AI relationship manager, powered by RevRag, answers questions, checks eligibility, and fills the application for you, by voice.
         </p>
         <div className="relative mt-6 flex flex-wrap gap-3">
           <button
             type="button"
-            onClick={() => agent.start()}
+            onClick={() => void call.start()}
             disabled={active}
             className="flex items-center gap-2 rounded-2xl bg-white px-5 py-3 font-semibold text-brand-900 shadow-lg transition hover:bg-brand-50 disabled:opacity-70"
           >
             <span className="grid size-6 place-items-center rounded-full bg-brand-600 text-xs text-white">●</span>
-            {active ? 'Sara is listening' : 'Talk to Sara'}
+            {active ? 'Sara is on the call' : 'Talk to Sara'}
           </button>
           <button type="button" onClick={() => goTo('loan')} className="rounded-2xl border border-white/30 px-5 py-3 font-semibold text-white hover:bg-white/10">
             Apply on my own

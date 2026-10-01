@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { FORM_STEPS, STEP_BY_ID, stepForPath } from '../../shared/schema';
-import { agent, useAgent } from '../agent/controller';
+import { call, useCall } from '../revrag/call';
 import { completedSteps } from '../state/journey';
 import { useApp } from '../state/store';
 import { goTo } from '../state/actions';
@@ -21,9 +21,9 @@ export function Header() {
           <img src="/favicon.svg" alt="" className="size-7" />
           Bliss Finance
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" data-ai-ignore>
           <StatusBadge />
-          <button type="button" onClick={() => (agent.active ? useAgent.setState({ panelOpen: true }) : agent.start())} className="rounded-full bg-brand-600 px-3.5 py-1.5 text-xs font-semibold text-white lg:hidden">
+          <button type="button" onClick={() => (call.active ? useCall.setState({ panelOpen: true }) : void call.start())} className="rounded-full bg-brand-600 px-3.5 py-1.5 text-xs font-semibold text-white lg:hidden">
             Sara
           </button>
         </div>

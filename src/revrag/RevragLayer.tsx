@@ -1,53 +1,33 @@
-// RevRag In-App Agent integration.
-// - Initialises the SDK and mounts the RevRag voice widget via EmbedProvider (route-aware).
-// - Identifies the user (USER_DATA) and continuously streams application context to RevRag:
-//   SCREEN_VIEW on navigation, FORM_STATE on edits, CUSTOM_EVENT / ANALYTICS_DATA for milestones
-//   and every action the agent performs.
-// - The RevRag web SDK does not execute UI actions on web (Action Intelligence is mobile-only today),
-//   so while a RevRag call is live, Sara runs as a silent "action co-pilot" that operates the app
-//   from the same conversation.
+// RevRag In-App Agent integration (SDK side).
+// - Initialises the official SDK (`useInitialize`) and identifies the customer (USER_DATA).
+// - Streams application context to RevRag: SCREEN_VIEW on navigation, FORM_STATE on edits,
+//   CUSTOM_EVENT / ANALYTICS_DATA for milestones and every action the RevRag agent performs.
+// The voice call itself, and RevRag's Action Intelligence protocol on web, live in call.ts.
 
-import { EmbedProvider, EventKeys, embedEvent, useInitialize } from '@revrag-ai/embed-react';
-import '@revrag-ai/embed-react/style.css';
+import { EventKeys, embedEvent, useInitialize } from '@revrag-ai/embed-react';
 import { useEffect, useRef, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { create } from 'zustand';
 import { FIELDS, displayValue, isEmpty, maskSensitive, stepForPath } from '../../shared/schema';
-import { agent } from '../agent/controller';
 import { completedSteps } from '../state/journey';
 import { bus } from '../state/bus';
 import { useApp } from '../state/store';
+import { REVRAG_API_KEY as API_KEY, appUserId } from './identity';
 
-const API_KEY = import.meta.env.VITE_REVRAG_API_KEY as string | undefined;
-
-export const useRevrag = create<{ configured: boolean; initialized: boolean; error: string | null; callActive: boolean; eventsSent: number; lastEvent: string | null }>(() => ({
+export const useRevrag = create<{ configured: boolean; initialized: boolean; error: string | null; eventsSent: number; lastEvent: string | null }>(() => ({
   configured: !!API_KEY,
   initialized: false,
   error: null,
-  callActive: false,
   eventsSent: 0,
   lastEvent: null,
 }));
-
-function userId() {
-  try {
-    let id = localStorage.getItem('bliss-user-id');
-    if (!id) {
-      id = 'guest-' + crypto.randomUUID().slice(0, 8);
-      localStorage.setItem('bliss-user-id', id);
-    }
-    return id;
-  } catch {
-    return 'guest-anon';
-  }
-}
 
 let identified = false;
 async function send(eventKey: string, data: Record<string, unknown>) {
   if (!useRevrag.getState().initialized) return;
   if (!identified && eventKey !== EventKeys.USER_DATA) return;
   try {
-    const r = await embedEvent.event({ eventKey: eventKey as never, data: { app_user_id: userId(), ...data } });
+    const r = await embedEvent.event({ eventKey: eventKey as never, data: { app_user_id: appUserId(), ...data } });
     useRevrag.setState((s) => ({ eventsSent: s.eventsSent + 1, lastEvent: `${eventKey}${r?.success === false ? ' (failed)' : ''}` }));
   } catch (e) {
     useRevrag.setState({ lastEvent: `${eventKey} error: ${String(e)}` });
@@ -108,27 +88,7 @@ function ContextSync() {
     [],
   );
 
-  // RevRag call lifecycle -> Sara co-pilot mode.
-  useEffect(() => {
-    const cb = (event: { type: string }) => {
-      if (event.type === EventKeys.AGENT_CONNECTED) {
-        useRevrag.setState({ callActive: true });
-        agent.setCopilot(true);
-      }
-      if (event.type === EventKeys.AGENT_DISCONNECTED) {
-        useRevrag.setState({ callActive: false });
-        agent.setCopilot(false);
-      }
-    };
-    embedEvent.addCallback(cb);
-    return () => embedEvent.removeCallback(cb);
-  }, []);
-
   return null;
-}
-
-function usePath() {
-  return useLocation().pathname;
 }
 
 function Initialised({ children }: { children: ReactNode }) {
@@ -137,13 +97,13 @@ function Initialised({ children }: { children: ReactNode }) {
     useRevrag.setState({ initialized: !!isInitialized, error: error ? String(error) : null });
   }, [isInitialized, error]);
 
-  // Never block the loan app on the widget: render the app regardless, add the widget when ready.
-  if (!isInitialized) return <>{children}<ContextSync /></>;
+  // Never block the loan app on the SDK. The voice call is started from Sara's panel (call.ts),
+  // so the SDK's own floating button is not mounted: one entry point, one conversation.
   return (
-    <EmbedProvider appVersion="1.0.0" usePathHook={usePath} embedButtonProps={{ positioning: 'fixed', position: { bottom: '24px', left: '24px' } }}>
+    <>
       {children}
       <ContextSync />
-    </EmbedProvider>
+    </>
   );
 }
 
