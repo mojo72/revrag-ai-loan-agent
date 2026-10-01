@@ -12,7 +12,9 @@ while IFS= read -r line || [ -n "$line" ]; do
   [[ "$name" == VERCEL_* ]] && continue
   for target in production; do
     npx vercel env rm "$name" "$target" --yes >/dev/null 2>&1 || true
-    printf '%s' "$value" | npx vercel env add "$name" "$target" >/dev/null
+    # VITE_* values are bundled into the browser by design (e.g. the publishable RevRag key).
+    type=secret; [[ "$name" == VITE_* ]] && type=config
+    printf '%s' "$value" | npx vercel env add "$name" "$target" --type "$type" >/dev/null
   done
   echo "set $name"
 done < .env.local
