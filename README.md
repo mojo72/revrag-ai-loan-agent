@@ -4,7 +4,7 @@ A voice-first AI Relationship Manager ("Sara") that **understands, guides and op
 
 > Say *"I want a 5 lakh personal loan for 3 years"* and watch Sara pick the product, fill the amount and tenure, tell you what is still missing, check your eligibility, move you through each screen, and submit, by voice.
 
-**Live app:** https://revrag-ai-loan-agent.vercel.app · **Product feedback:** [docs/PRODUCT_FEEDBACK.md](docs/PRODUCT_FEEDBACK.md) · **Demo script:** [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md)
+**Live app:** https://revrag-ai-loan-agent.vercel.app · **Product feedback:** [docs/PRODUCT_FEEDBACK.md](docs/PRODUCT_FEEDBACK.md) · **Demo script:** [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) · **RevRag agent prompt & knowledge base:** [REVRAG_AGENT_PROMPT.md](REVRAG_AGENT_PROMPT.md)
 
 Bliss Finance is a fictional lender. No real money, credit checks or KYC happen; uploaded files never leave the browser.
 
