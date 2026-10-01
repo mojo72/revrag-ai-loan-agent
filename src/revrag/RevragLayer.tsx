@@ -52,6 +52,9 @@ function ContextSync() {
     if (!initialized || identified) return;
     void send(EventKeys.USER_DATA, { name: (useApp.getState().data.full_name as string) ?? 'Guest', channel: 'web', app: 'bliss-loan-demo' }).then(() => {
       identified = true;
+      // Events before identity are dropped by RevRag, so (re)send the screen the customer is on.
+      const step = stepForPath(window.location.pathname);
+      void send('screen_view', { screen: step.id, screen_title: step.title, path: window.location.pathname });
     });
   }, [initialized]);
 

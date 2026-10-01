@@ -135,7 +135,9 @@ class RevragCall {
       const res = await fetch(`${REVRAG_BASE}/embedded-agent/token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Revrag-Embedded-Key': REVRAG_API_KEY, 'X-Revrag-App-Version': '1.0.0' },
-        body: JSON.stringify({ app_user_id: appUserId(), app_version: '1.0.0' }),
+        // call_type EMBEDDED is what RevRag's mobile SDKs send for in-app (Action Intelligence) calls;
+        // the official web SDK omits it.
+        body: JSON.stringify({ app_user_id: appUserId(), call_type: 'EMBEDDED', app_version: '1.0.0' }),
       });
       if (!res.ok) throw new Error(`RevRag token request failed (${res.status})`);
       const { server_url, token } = (await res.json()) as { server_url: string; token: string };
@@ -247,7 +249,9 @@ class RevragCall {
     try {
       room.registerTextStreamHandler('lk.transcription', async (reader, info) => {
         const role = info.identity === room.localParticipant.identity ? 'user' : 'agent';
-        const id = `s_${reader.info.id}`;
+        // Same segment id as the legacy TranscriptionReceived event, so a segment delivered both ways shows once.
+        const seg = reader.info.attributes?.['lk.segment_id'];
+        const id = seg ? `t_${seg}` : `s_${reader.info.id}`;
         let text = '';
         for await (const chunk of reader) {
           text += chunk;
