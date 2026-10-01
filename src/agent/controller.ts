@@ -74,6 +74,8 @@ class AgentController {
   private lastSpokeAt = 0;
   private lastSpokenText = '';
   private started = false;
+  /** Tool results not yet sent: when a turn needs no follow-up call, they ride along with the next user message. */
+  private deferred: Anthropic.Beta.BetaToolResultBlockParam[] = [];
 
   constructor() {
     this.speaker.onSpeakingChange = (speaking, text) => {
@@ -272,7 +274,12 @@ class AgentController {
     this.refreshStatus();
     const copilot = useAgent.getState().copilot;
     const base = this.messages.length;
-    this.messages.push({ role: 'user', content: [{ type: 'text', text: buildContext({ voiceMuted: copilot }) }, { type: 'text', text: userText }] });
+    const carried = this.deferred;
+    this.deferred = [];
+    this.messages.push({
+      role: 'user',
+      content: [...carried, { type: 'text', text: buildContext({ voiceMuted: copilot }) }, { type: 'text', text: userText }],
+    });
 
     try {
       for (let i = 0; i < 10; i++) {
@@ -302,11 +309,20 @@ class AgentController {
         if (body.stop_reason !== 'tool_use' || toolUses.length === 0) break;
 
         const results: Anthropic.Beta.BetaToolResultBlockParam[] = [];
+        let needsFollowUp = !text;
         for (const tu of toolUses) {
-          const out = await executeTool(tu.name, (tu.input ?? {}) as Record<string, unknown>);
+          const input = (tu.input ?? {}) as Record<string, unknown>;
+          const out = await executeTool(tu.name, input);
           push('action', out.summary, !out.isError);
           bus.emit({ type: 'agent_action', tool: tu.name, summary: out.summary });
           results.push({ type: 'tool_result', tool_use_id: tu.id, content: out.content, is_error: out.isError || undefined });
+          if (out.isError || out.content.includes('INVALID') || out.content.includes('NOT SET') || returnsInformation(tu.name, input)) needsFollowUp = true;
+        }
+        // Latency: if Riya already said her reply and every action simply succeeded, skip the follow-up
+        // model call. The results are sent with the next user message, so history stays valid.
+        if (!needsFollowUp) {
+          this.deferred = results;
+          break;
         }
         this.messages.push({ role: 'user', content: [...results, { type: 'text', text: buildContext({ voiceMuted: copilot }) }] });
       }
@@ -315,6 +331,7 @@ class AgentController {
       // Roll back this turn so the history stays valid (no dangling tool_use). Any actions already
       // taken are visible to the model next turn through app_context.
       this.messages.length = base;
+      this.deferred = carried; // they belong to the assistant turn that is still in history
       const status = (e as { status?: number }).status;
       push('error', e instanceof Error ? e.message : String(e));
       // Be honest about the failure: a setup problem won't be fixed by the customer repeating themselves.
@@ -334,8 +351,15 @@ class AgentController {
     this.stop();
     this.messages = [];
     this.pending = [];
+    this.deferred = [];
     useAgent.setState({ items: [] });
   }
+}
+
+/** Tools whose output Riya has to relay or reason about, so they always need a follow-up model call. */
+function returnsInformation(tool: string, input: Record<string, unknown>) {
+  if (tool === 'calculate_emi' || tool === 'get_application_state') return true;
+  return tool === 'press_button' && ['check_eligibility', 'submit_application', 'start_new_application'].includes(String(input.button));
 }
 
 export const agent = new AgentController();
