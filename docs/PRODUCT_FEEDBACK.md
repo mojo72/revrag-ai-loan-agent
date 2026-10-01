@@ -6,8 +6,9 @@ From building a voice-first loan Relationship Manager on the RevRag **React (web
 
 1. **The biggest gap: Action Intelligence exists on the platform but not in the web SDK.** My agent's `/initialize` config has `action_config.flags.actionIntelligence: true` (plus highlighting, click tracking and more), and the React Native SDK implements a full protocol for it over the LiveKit data channel. The React SDK (1.4.4) reads none of it. To meet the assignment's most important requirement on RevRag alone, I implemented that mobile protocol for the browser myself (`src/revrag/`), so RevRag's own agent now operates the web app.
 2. **The host app cannot hear the conversation through the SDK.** There is no transcript, agent-state or data-channel callback on web, and the SDK keeps its LiveKit room private. I had to run the call myself (RevRag token + `livekit-client`) to get transcripts, the agent's state, and the data channel. That means re-implementing what the SDK should provide.
-3. **The SDK's developer experience undercuts trust**: TypeScript types resolve to `any`, documented hooks are not exported, useful event keys are undocumented, and there is no self-serve key to try it.
-4. **The foundation is good**: three-line integration, route-aware visibility, a clean event model, and server-side handling of voice infrastructure (LiveKit) are genuinely fast to adopt.
+3. **In live calls the agent said "Done" without acting.** Asked to fill fields, it replied "Done." while sending no mission; in another call it said it could not tap the screen. Agents must never claim actions that were not verified (section 6).
+4. **The SDK's developer experience undercuts trust**: TypeScript types resolve to `any`, documented hooks are not exported, useful event keys are undocumented, and there is no self-serve key to try it.
+5. **The foundation is good**: three-line integration, route-aware visibility, a clean event model, and server-side handling of voice infrastructure (LiveKit) are genuinely fast to adopt.
 
 ---
 
@@ -128,4 +129,15 @@ Correct types, exported documented hooks, CSP-safe bundle, event queueing, React
 
 ## 6. Live-call observations
 
-_To be completed from real voice calls with the RevRag agent: latency, voice quality, whether the planner sends missions to the web client, how well it uses the snapshots, and how it recovers from failed steps._
+From live calls against my RevRag agent on the deployed app (text sent into the call via LiveKit's `lk.chat` topic; microphone blocked in the test browser, so voice quality and spoken-turn latency still need a human test):
+
+| Observation | Detail | Why it matters |
+|---|---|---|
+| **The agent claimed an action it never took.** | Asked to "select personal loan and fill the amount as 5 lakh and tenure 36 months", it listed the values and replied "Done." No mission was sent; the form stayed empty. | In lending, telling a customer something is done when it is not is the most damaging failure an agent can have. The platform should forbid action claims without a successful `verification_result`. |
+| **No missions on web, despite Action Intelligence being on.** | `action_config.flags.actionIntelligence: true`, `call_type: "EMBEDDED"`, fresh `ui_snapshot`s on connect and after each turn, and a `/embedded-agent/ui-graph` upload (accepted: `event_rows_written: 1`). Two calls, 0 missions. | The flag suggests the feature is available; nothing tells the developer why it is inert. A per-call "Action Intelligence: active / inactive because X" signal would have saved hours. |
+| **Inconsistent self-knowledge.** | In one call it said "Done"; in the next, "I can't tap the screen for you". | The agent should know, and say consistently, what it can do in this session. |
+| **Screen context does reach the agent.** | Unprompted, it referred to the "Loan details screen" and the "Loan product" field. | Good: the snapshot / screen events are used for guidance. |
+| **Markdown in a voice agent.** | Replies contained bullet lists ("- Product: Personal loan - Amount: ...") which then show in transcripts and are read aloud oddly. | Voice agents should be constrained to spoken style by default. |
+| **Duplicate transcripts.** | Every agent line arrives twice (legacy transcription event and `lk.transcription` text stream) with different ids. | Clients must dedupe by text. Pick one channel, or share the segment id. |
+| **Idle nudge.** | "Are you still there?" after a short silence. | Useful, but should be configurable per screen (a customer reading terms needs longer). |
+| **Typed input works.** | Messages on `lk.chat` are answered like speech. | Lets customers in noisy places type; worth documenting for web. |

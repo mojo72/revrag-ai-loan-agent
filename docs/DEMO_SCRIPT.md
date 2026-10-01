@@ -1,6 +1,6 @@
 # Demo video script (5 to 7 minutes)
 
-Focus only on the agent and what it does. No architecture or feedback talk. Record in Chrome with system audio on so Sara's voice is captured. Start from a fresh tab (application data lives in session storage).
+Focus only on the agent and what it does. Sara (RevRag) guides by voice and you fill the form as she instructs; if RevRag enables Action Intelligence for the agent, she fills it herself and the action timeline shows each step. No architecture or feedback talk. Record in Chrome with system audio on so Sara's voice is captured. Start from a fresh tab (application data lives in session storage).
 
 | Time | You do / say | What the viewer should see |
 |---|---|---|
