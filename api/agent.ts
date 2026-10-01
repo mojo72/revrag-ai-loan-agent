@@ -17,8 +17,11 @@ export async function POST(request: Request): Promise<Response> {
   if (raw.length > MAX_BODY_BYTES) return json({ error: 'Conversation too long, please start a new session.' }, 413);
 
   let messages: Anthropic.Beta.BetaMessageParam[];
+  let speakOnly = false;
   try {
-    messages = (JSON.parse(raw) as { messages: Anthropic.Beta.BetaMessageParam[] }).messages;
+    const body = JSON.parse(raw) as { messages: Anthropic.Beta.BetaMessageParam[]; speakOnly?: boolean };
+    messages = body.messages;
+    speakOnly = body.speakOnly === true;
   } catch {
     return json({ error: 'Invalid JSON' }, 400);
   }
@@ -36,6 +39,9 @@ export async function POST(request: Request): Promise<Response> {
       output_config: { effort: (env('AGENT_EFFORT') as 'low' | 'medium' | 'high') ?? 'low' },
       system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
       tools: AGENT_TOOLS as unknown as Anthropic.Beta.BetaToolUnion[],
+      // Relay-only follow-ups: with no tool call after it, the reply comes back as visible text.
+      // (On this model, text written before a tool call mid-turn is returned as a hidden progress note.)
+      ...(speakOnly ? { tool_choice: { type: 'none' as const } } : {}),
       cache_control: { type: 'ephemeral' },
       messages,
       ...(useFallbacks ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' as const } : {}),

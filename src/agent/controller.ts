@@ -281,12 +281,13 @@ class AgentController {
       content: [...carried, { type: 'text', text: buildContext({ voiceMuted: copilot }) }, { type: 'text', text: userText }],
     });
 
+    let speakOnly = false;
     try {
       for (let i = 0; i < 10; i++) {
         const res = await fetch('/api/agent', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ messages: this.messages }),
+          body: JSON.stringify({ messages: this.messages, speakOnly }),
         });
         const body = (await res.json()) as { content?: Block[]; stop_reason?: string; error?: string; detail?: string };
         if (!res.ok || !body.content) throw Object.assign(new Error(body.error ?? `Agent error ${res.status}`), { status: res.status });
@@ -310,14 +311,20 @@ class AgentController {
 
         const results: Anthropic.Beta.BetaToolResultBlockParam[] = [];
         let needsFollowUp = !text;
+        let failed = false;
+        let informational = false;
         for (const tu of toolUses) {
           const input = (tu.input ?? {}) as Record<string, unknown>;
           const out = await executeTool(tu.name, input);
           push('action', out.summary, !out.isError);
           bus.emit({ type: 'agent_action', tool: tu.name, summary: out.summary });
           results.push({ type: 'tool_result', tool_use_id: tu.id, content: out.content, is_error: out.isError || undefined });
-          if (out.isError || out.content.includes('INVALID') || out.content.includes('NOT SET') || returnsInformation(tu.name, input)) needsFollowUp = true;
+          if (out.isError || out.content.includes('INVALID') || out.content.includes('NOT SET')) failed = true;
+          if (returnsInformation(tu.name, input)) informational = true;
         }
+        needsFollowUp ||= failed || informational;
+        // A follow-up that only relays a result must not call tools, or its words come back hidden.
+        speakOnly = informational && !failed;
         // Latency: if Riya already said her reply and every action simply succeeded, skip the follow-up
         // model call. The results are sent with the next user message, so history stays valid.
         if (!needsFollowUp) {
