@@ -7,6 +7,8 @@ import { FIELDS, STEP_BY_ID, coerceField, displayValue, isVisible, maskSensitive
 import { currentStep, goTo, pressButton } from '../state/actions';
 import { bus } from '../state/bus';
 import { useApp } from '../state/store';
+import { languageByCode, LANGUAGE_CODES } from '../../shared/languages';
+import { useLanguage } from '../voice/language';
 import { fullState } from './context';
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -131,6 +133,14 @@ export async function executeTool(name: string, input: Record<string, unknown>):
         isError: false,
         summary: `EMI ${formatINR(b.emi)}/mo`,
       };
+    }
+
+    case 'set_language': {
+      const code = String(input.language);
+      if (!LANGUAGE_CODES.includes(code)) return { content: `Unsupported language ${code}.`, isError: true, summary: 'Language not supported' };
+      useLanguage.getState().set(code);
+      const l = languageByCode(code);
+      return { content: `Conversation language is now ${l.label}. Voice and speech recognition switched.`, isError: false, summary: `Switched to ${l.label}` };
     }
 
     case 'get_application_state':

@@ -5,6 +5,7 @@ import { formatINR } from '../../shared/products';
 import { currentStep } from '../state/actions';
 import { completedSteps } from '../state/journey';
 import { currentEligibility, useApp } from '../state/store';
+import { currentLanguage } from '../voice/language';
 
 export function buildContext(opts: { voiceMuted?: boolean } = {}): string {
   const s = useApp.getState();
@@ -42,6 +43,7 @@ export function buildContext(opts: { voiceMuted?: boolean } = {}): string {
         : 'not checked yet',
     application_id: s.applicationId,
     customer_did_by_hand: s.takeManualChanges(),
+    conversation_language: `${currentLanguage().label} (${currentLanguage().code})`,
     ...(opts.voiceMuted
       ? { voice_output: 'MUTED. The RevRag voice agent is talking to the customer. You are the silent action co-pilot: act on what the customer says, reply with at most a few words, never ask questions.' }
       : {}),

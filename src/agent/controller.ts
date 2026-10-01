@@ -9,6 +9,7 @@ import { formatINR } from '../../shared/products';
 import { currentStep } from '../state/actions';
 import { bus } from '../state/bus';
 import { BrowserStt, DeepgramStt, browserSttSupported, type Stt } from '../voice/stt';
+import { currentLanguage, useLanguage } from '../voice/language';
 import { Speaker } from '../voice/tts';
 import { buildContext } from './context';
 import { executeTool } from './tools';
@@ -64,7 +65,8 @@ const push = (role: TranscriptItem['role'], text: string, ok?: boolean) =>
     return { items: [...s.items, { id: ++seq, role, text, ok }].slice(-80) };
   });
 
-const words = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(Boolean);
+// Unicode-aware so Hindi, Tamil, Bengali etc. survive (a Latin-only filter would erase them).
+const words = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{M}\p{N}\s]/gu, ' ').split(/\s+/).filter(Boolean);
 
 class AgentController {
   private messages: Msg[] = [];
@@ -83,6 +85,19 @@ class AgentController {
       if (!speaking) this.lastSpokeAt = Date.now();
       this.refreshStatus(speaking);
     };
+    this.speaker.locale = currentLanguage().murfLocale;
+    // Switching language (picker or Riya's set_language tool) retunes both ears and voice.
+    useLanguage.subscribe((state, prev) => {
+      if (state.code === prev.code) return;
+      const lang = currentLanguage();
+      this.speaker.locale = lang.murfLocale;
+      push('event', `Language: ${lang.label} (${lang.native})`);
+      if (this.stt) {
+        this.stt.stop();
+        this.stt = undefined;
+        void this.loadProviders().then((p) => this.startMic(p));
+      }
+    });
     bus.on((e) => {
       if (!this.started || useAgent.getState().copilot) return;
       if (e.type === 'validation_failed' && e.source === 'user')
@@ -146,9 +161,10 @@ class AgentController {
         push('error', m);
       },
     };
+    const lang = currentLanguage();
     const candidates: Stt[] = [];
-    if (p.stt) candidates.push(new DeepgramStt(cb));
-    if (browserSttSupported()) candidates.push(new BrowserStt(cb));
+    if (p.stt && lang.deepgram) candidates.push(new DeepgramStt(cb, lang.deepgram));
+    if (browserSttSupported()) candidates.push(new BrowserStt(cb, lang.browserLocale));
     for (const stt of candidates) {
       try {
         await stt.start();
@@ -206,6 +222,12 @@ class AgentController {
   }
 
   private greet() {
+    const lang = currentLanguage();
+    if (lang.code !== 'en') {
+      // Let Riya greet in the customer's language rather than a canned English line.
+      void this.run(`<app_event>Voice session started. Greet the customer warmly in ${lang.label}, introduce yourself as ${AGENT_NAME}, and ask how you can help with their loan.</app_event>`);
+      return;
+    }
     const step = currentStep();
     const text =
       step === 'discover'

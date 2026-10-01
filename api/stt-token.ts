@@ -12,10 +12,5 @@ export async function GET(): Promise<Response> {
   });
   if (!res.ok) return json({ error: `Deepgram grant failed (${res.status})`, detail: await res.text() }, 502);
   const { access_token, expires_in } = (await res.json()) as { access_token: string; expires_in: number };
-  return json({
-    token: access_token,
-    expiresIn: expires_in,
-    model: env('DEEPGRAM_MODEL') ?? 'nova-3',
-    language: env('DEEPGRAM_LANGUAGE') ?? 'en-IN',
-  });
+  return json({ token: access_token, expiresIn: expires_in });
 }

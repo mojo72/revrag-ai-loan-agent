@@ -48,9 +48,11 @@ export class DeepgramStt implements Stt {
   private keepAlive?: number;
   private reconnects = 0;
   private cb: SttCallbacks;
+  private config: { model: string; language: string };
 
-  constructor(cb: SttCallbacks) {
+  constructor(cb: SttCallbacks, config: { model: string; language: string }) {
     this.cb = cb;
+    this.config = config;
   }
 
   async start() {
@@ -86,17 +88,17 @@ export class DeepgramStt implements Stt {
   private async connect() {
     const res = await fetch('/api/stt-token');
     if (!res.ok) throw new Error('Could not get a speech token');
-    const { token, model, language } = (await res.json()) as { token: string; model?: string; language?: string };
+    const { token } = (await res.json()) as { token: string };
     const params = new URLSearchParams({
-      model: model ?? 'nova-3',
-      language: language ?? 'en-IN',
+      model: this.config.model,
+      language: this.config.language,
       encoding: 'linear16',
       sample_rate: String(this.ctx!.sampleRate),
       channels: '1',
       interim_results: 'true',
       smart_format: 'true',
       punctuate: 'true',
-      numerals: 'true',
+      ...(this.config.language === 'multi' || this.config.language.startsWith('en') ? { numerals: 'true' } : {}),
       endpointing: '500',
       utterance_end_ms: '1300',
       vad_events: 'true',
@@ -179,9 +181,11 @@ export class BrowserStt implements Stt {
   private rec?: InstanceType<SpeechRecognitionCtor>;
   private active = false;
   private cb: SttCallbacks;
+  private locale: string;
 
-  constructor(cb: SttCallbacks) {
+  constructor(cb: SttCallbacks, locale: string) {
     this.cb = cb;
+    this.locale = locale;
   }
 
   async start() {
@@ -192,7 +196,7 @@ export class BrowserStt implements Stt {
     const rec = new Ctor();
     rec.continuous = true;
     rec.interimResults = true;
-    rec.lang = 'en-IN';
+    rec.lang = this.locale;
     rec.onresult = (e) => {
       let interim = '';
       for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -209,7 +213,7 @@ export class BrowserStt implements Stt {
       'not-allowed': 'Microphone permission was denied. You can type to me below.',
       'service-not-allowed': "This browser doesn't allow speech recognition here. You can type to me below.",
       'audio-capture': 'No microphone was found. You can type to me below.',
-      'language-not-supported': "This browser doesn't support Indian English speech recognition. You can type to me below.",
+      'language-not-supported': "This browser can't recognise speech in this language. Try Google Chrome, or type to me below.",
     };
     let restarts: number[] = [];
     rec.onerror = (e) => {

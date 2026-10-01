@@ -5,7 +5,7 @@
 type Clip = { text: string; audio: Promise<AudioBuffer | null> };
 
 export function splitSentences(text: string): string[] {
-  const parts = text.replace(/\s+/g, ' ').match(/[^.!?]+[.!?]+["')\]]*|[^.!?]+$/g) ?? [text];
+  const parts = text.replace(/\s+/g, ' ').match(/[^.!?।]+[.!?।]+["')\]]*|[^.!?।]+$/g) ?? [text];
   // Merge very short fragments so we don't make lots of tiny requests.
   const out: string[] = [];
   for (const p of parts.map((s) => s.trim()).filter(Boolean)) {
@@ -31,6 +31,9 @@ export class Speaker {
     this.murfOk = useMurf;
   }
 
+  /** Murf locale for the conversation language, e.g. "ta-IN". */
+  locale = 'en-IN';
+
   setMurf(on: boolean) {
     this.murfOk = on;
   }
@@ -47,7 +50,7 @@ export class Speaker {
   }
 
   speak(text: string) {
-    for (const s of splitSentences(text)) this.queue.push({ text: s, audio: this.fetchAudio(s) });
+    for (const s of splitSentences(text)) this.queue.push({ text: s, audio: this.fetchAudio(s, this.locale) });
     if (!this.playing) void this.drain(this.generation);
   }
 
@@ -76,10 +79,10 @@ export class Speaker {
     if (!p) this.idleWaiters.splice(0).forEach((r) => r());
   }
 
-  private async fetchAudio(text: string): Promise<AudioBuffer | null> {
+  private async fetchAudio(text: string, locale: string): Promise<AudioBuffer | null> {
     if (!this.murfOk || !this.ctx) return null;
     try {
-      const res = await fetch('/api/tts', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text }) });
+      const res = await fetch('/api/tts', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text, locale }) });
       if (!res.ok) throw new Error(String(res.status));
       return await this.ctx.decodeAudioData(await res.arrayBuffer());
     } catch (e) {
@@ -117,7 +120,13 @@ export class Speaker {
       if (!('speechSynthesis' in window)) return resolve();
       const u = new SpeechSynthesisUtterance(text);
       const voices = speechSynthesis.getVoices();
-      u.voice = voices.find((v) => v.lang === 'en-IN' && /female|veena|isha|heera/i.test(v.name)) ?? voices.find((v) => v.lang === 'en-IN') ?? voices.find((v) => v.lang.startsWith('en')) ?? null;
+      const lang = this.locale;
+      u.lang = lang;
+      u.voice =
+        voices.find((v) => v.lang === lang && /female|veena|isha|heera|lekha/i.test(v.name)) ??
+        voices.find((v) => v.lang === lang) ??
+        voices.find((v) => v.lang.startsWith(lang.slice(0, 2))) ??
+        null;
       u.rate = 1.03;
       u.onend = u.onerror = () => resolve();
       speechSynthesis.speak(u);

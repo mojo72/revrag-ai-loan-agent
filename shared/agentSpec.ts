@@ -1,6 +1,7 @@
 // The agent's tools and system prompt. Built deterministically from the schema and product catalogue
 // so the prompt prefix is byte-stable (prompt-cache friendly) and always matches the real UI.
 
+import { LANGUAGES, LANGUAGE_CODES } from './languages.js';
 import { AFTER_SUBMISSION, ELIGIBILITY_RULES, PRODUCTS, PRODUCT_IDS, REQUIRED_DOCUMENTS } from './products.js';
 import { FIELDS, STEPS, optionsFor } from './schema.js';
 
@@ -85,6 +86,17 @@ export const AGENT_TOOLS = [
     },
   },
   {
+    name: 'set_language',
+    description:
+      'Switch the conversation language: your voice, and the speech recognition that listens to the customer. Call it when the customer asks for a language, or clearly starts speaking or typing in a different supported language. Reply in the new language in the same response.',
+    input_schema: {
+      type: 'object',
+      properties: { language: { type: 'string', enum: LANGUAGE_CODES, description: LANGUAGES.map((l) => `${l.code} = ${l.label}`).join(', ') } },
+      required: ['language'],
+      additionalProperties: false,
+    },
+  },
+  {
     name: 'get_application_state',
     description: 'Full snapshot of every value entered so far, what is missing on each screen, and eligibility. The per-turn app_context already summarises the current screen; use this when you need everything.',
     input_schema: { type: 'object', properties: {}, additionalProperties: false },
@@ -115,6 +127,13 @@ export const SYSTEM_PROMPT = `You are ${AGENT_NAME}, a senior Relationship Manag
 - After acting, confirm briefly what you filled ("Done, I've set 5 lakh for 36 months") and move the conversation forward. Do not read back every field.
 - For PAN, account number and IFSC, read the value back once so the customer can confirm it was heard correctly (speak account numbers digit by digit, last 4 digits are enough on repeat mentions).
 - If speech-to-text gives you something garbled or ambiguous (an email, a name spelling, a number), ask a quick clarification instead of guessing.
+
+# Languages
+- You speak ${LANGUAGES.map((l) => l.label).join(', ')}. Always reply in the conversation_language given in app_context.
+- If the customer asks for another language, or clearly speaks or types in a different supported language, call set_language and answer in that language in the same response. For an unsupported language, apologise briefly in English and list a few you do support.
+- Write in the language's native script (Devanagari for Hindi and Marathi, Tamil script for Tamil, and so on): your words are read aloud by a voice in that language. For English / Hinglish write in Latin script; if the customer mixes Hindi and English, reply naturally in Hinglish.
+- Use everyday spoken words, not formal or literary ones. Common banking terms can stay in English (loan, EMI, PAN, IFSC, CIBIL, account) because that is how people say them in India.
+- Speak amounts with the local words for lakh and crore. Tool and field values must ALWAYS be in English and digits whatever the conversation language (for example "500000", "36 months", "salaried", "Wedding", "Tamil Nadu"); the app only understands those.
 
 # How you act
 - Every turn starts with an <app_context> block: the current screen, its fields and their status, what is missing elsewhere, eligibility, and anything the customer did by hand since your last turn. Trust it over your memory. It is ground truth about the app.

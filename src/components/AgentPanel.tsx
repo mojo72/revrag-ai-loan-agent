@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { LANGUAGES } from '../../shared/languages';
 import { agent, useAgent, type Status } from '../agent/controller';
+import { useLanguage } from '../voice/language';
 
 const STATUS_TEXT: Record<Status, string> = {
   off: 'Tap to talk',
@@ -33,6 +35,7 @@ function Orb({ status, micOn, size = 'lg' }: { status: Status; micOn: boolean; s
 export function AgentPanel() {
   const { status, panelOpen, micOn, interim, items, copilot, sttProvider } = useAgent();
   const [text, setText] = useState('');
+  const lang = useLanguage();
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -80,6 +83,22 @@ export function AgentPanel() {
             </div>
           </div>
           <div className="flex items-center gap-1">
+            <label className="sr-only" htmlFor="riya-language">
+              Conversation language
+            </label>
+            <select
+              id="riya-language"
+              value={lang.code}
+              onChange={(e) => lang.set(e.target.value)}
+              className="max-w-[9.5rem] rounded-lg border border-line bg-canvas px-2 py-1.5 text-xs text-ink outline-none focus:border-brand-500"
+              title="Language Riya speaks and listens in"
+            >
+              {LANGUAGES.map((l) => (
+                <option key={l.code} value={l.code}>
+                  {l.native === 'English' ? l.label : `${l.native} · ${l.label}`}
+                </option>
+              ))}
+            </select>
             {status !== 'off' && (
               <button type="button" onClick={() => agent.stop()} className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted hover:bg-canvas hover:text-bad">
                 End
