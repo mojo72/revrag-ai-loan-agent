@@ -53,9 +53,17 @@ function push(role: TranscriptItem['role'], text: string, ok?: boolean) {
 function upsertSegment(id: string, role: 'user' | 'agent', text: string, final: boolean) {
   useCall.setState((s) => {
     const i = s.items.findIndex((it) => it.id === id);
-    if (i === -1) return { items: [...s.items, { id, role, text, final }].slice(-120) };
+    if (i === -1) {
+      // LiveKit agents deliver each segment twice (legacy transcription event + text stream) with
+      // different ids; drop a copy whose text matches a recent line from the same speaker.
+      const norm = text.trim();
+      if (s.items.slice(-4).some((it) => it.role === role && it.text.trim() === norm)) return s;
+      return { items: [...s.items, { id, role, text, final }].slice(-120) };
+    }
     const items = s.items.slice();
     items[i] = { ...items[i], text, final };
+    // A streamed copy can finish into a duplicate of a line that is already there.
+    if (final && items.some((it, j) => j !== i && j >= items.length - 5 && it.role === role && it.text.trim() === text.trim())) items.splice(i, 1);
     return { items };
   });
 }
