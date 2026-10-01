@@ -91,7 +91,7 @@ export function AgentPanel() {
             <div className="rounded-2xl bg-brand-50 p-4 text-sm text-brand-900">
               <p className="font-semibold">Hi, I'm Sara.</p>
               <p className="mt-1 text-brand-900/80">
-                I can explain our loans, check your eligibility, and fill the application for you while we talk. Tap the orb to start a voice call.
+                I can explain our loans, check your eligibility, and guide you through every step of the application while we talk. Tap the orb to start a voice call.
               </p>
               <p className="mt-3 text-xs font-medium text-brand-900/70">Try saying</p>
               <ul className="mt-1 space-y-1">

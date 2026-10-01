@@ -19,9 +19,9 @@ export function DiscoverPage() {
         <div className="pointer-events-none absolute -right-20 -top-24 size-72 rounded-full bg-brand-500/40 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 left-10 size-64 rounded-full bg-accent/25 blur-3xl" />
         <p className="relative text-sm font-medium text-brand-200">Bliss Finance · Instant loans</p>
-        <h1 className="relative mt-2 max-w-lg font-display text-4xl font-bold leading-tight sm:text-5xl">Just say what you need. Sara does the paperwork.</h1>
+        <h1 className="relative mt-2 max-w-lg font-display text-4xl font-bold leading-tight sm:text-5xl">Just say what you need. Sara walks you through it.</h1>
         <p className="relative mt-3 max-w-md text-brand-100">
-          Your AI relationship manager, powered by RevRag, answers questions, checks eligibility, and fills the application for you, by voice.
+          Your AI relationship manager, powered by RevRag, answers your questions and guides you through eligibility and the application, by voice.
         </p>
         <div className="relative mt-6 flex flex-wrap gap-3">
           <button
