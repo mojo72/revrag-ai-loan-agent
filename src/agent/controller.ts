@@ -282,7 +282,7 @@ class AgentController {
           body: JSON.stringify({ messages: this.messages }),
         });
         const body = (await res.json()) as { content?: Block[]; stop_reason?: string; error?: string; detail?: string };
-        if (!res.ok || !body.content) throw new Error(body.error ?? `Agent error ${res.status}`);
+        if (!res.ok || !body.content) throw Object.assign(new Error(body.error ?? `Agent error ${res.status}`), { status: res.status });
 
         this.messages.push({ role: 'assistant', content: body.content as Anthropic.Beta.BetaContentBlockParam[] });
 
@@ -315,8 +315,13 @@ class AgentController {
       // Roll back this turn so the history stays valid (no dangling tool_use). Any actions already
       // taken are visible to the model next turn through app_context.
       this.messages.length = base;
+      const status = (e as { status?: number }).status;
       push('error', e instanceof Error ? e.message : String(e));
-      this.say('Sorry, I lost my connection for a moment. Could you say that again?');
+      // Be honest about the failure: a setup problem won't be fixed by the customer repeating themselves.
+      if (status === 401 || status === 403 || status === 503)
+        this.say("Sorry, I'm unavailable right now because of a setup problem on our side. You can still fill the form yourself, and I'll be back shortly.");
+      else if (status === 429) this.say("I'm getting a lot of requests right now. Give me a few seconds and try again.");
+      else this.say('Sorry, I lost my connection for a moment. Could you say that again?');
     } finally {
       useAgent.setState({ busy: false });
       this.refreshStatus();
