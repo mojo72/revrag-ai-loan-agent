@@ -1,10 +1,10 @@
 # Bliss Finance · Claude AI Loan Agent
 
-A voice-first AI Relationship Manager ("Sara") that **understands, guides and operates** a loan application end to end. Built for the RevRag AI In-App Agent assignment. This branch (`claude-agent`) is the Claude-powered version: Claude reasons and operates the app, Deepgram listens, Murf (Khyati) speaks.
+A voice-first AI Relationship Manager ("Sara") that **understands, guides and operates** a loan application end to end. Built for the RevRag AI In-App Agent assignment. This app (branch `claude-agent`) uses only Claude, Deepgram and Murf: Claude reasons and operates the app, Deepgram listens, Murf (Khyati) speaks. The RevRag In-App Agent version is a separate app on branch `main`.
 
 > Say *"I want a 5 lakh personal loan for 3 years"* and watch Sara pick the product, fill the amount and tenure, tell you what is still missing, check your eligibility, move you through each screen, and submit, by voice.
 
-**Live app:** https://claude-ai-loan-agent.vercel.app · **RevRag-only version:** https://revrag-ai-loan-agent.vercel.app (branch `main`) · **Product feedback:** [docs/PRODUCT_FEEDBACK.md](docs/PRODUCT_FEEDBACK.md) · **Demo script:** [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) · **RevRag agent prompt & knowledge base:** [REVRAG_AGENT_PROMPT.md](REVRAG_AGENT_PROMPT.md)
+**Live app:** https://claude-ai-loan-agent.vercel.app · **Demo script:** [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) · **RevRag version (separate app, branch `main`):** https://revrag-ai-loan-agent.vercel.app
 
 Bliss Finance is a fictional lender. No real money, credit checks or KYC happen; uploaded files never leave the browser.
 
@@ -21,7 +21,6 @@ Bliss Finance is a fictional lender. No real money, credit checks or KYC happen;
 | **Application context** | Every turn the agent receives the current screen, its fields and their status, what is missing elsewhere, eligibility, and anything the customer did by hand. "What do I enter here?" is answered for the screen you are on. Information already given is never asked for again. |
 | **Proactive help** | If the customer clicks Continue and validation fails, or runs eligibility themselves, the agent reacts without being asked. |
 | **Guardrails** | Consents are only ticked after an explicit spoken "yes"; submission needs confirmation; the agent cannot skip the same gates a human faces (eligibility, required fields); sensitive values are masked on screen. |
-| **RevRag In-App Agent** | RevRag widget embedded with route-aware `EmbedProvider`; user identity and live application context are streamed to RevRag (`USER_DATA`, `SCREEN_VIEW`, `FORM_STATE`, `CUSTOM_EVENT`, `ANALYTICS_DATA`). When a RevRag voice call is live, Sara switches to **co-pilot mode**: RevRag does the talking, Sara silently operates the app from the same conversation. |
 
 ## The journey
 
@@ -41,7 +40,6 @@ Bliss Finance is a fictional lender. No real money, credit checks or KYC happen;
  │ Mic ─► Deepgram WS (PCM, short-lived token)   │            │ /api/config     provider flags│
  │ Speaker ◄─ Murf MP3 (sentence-pipelined)      │            └──────────────────────────────┘
  │                                               │
- │ RevRag SDK: widget + context events ──────────┼──► RevRag platform
  └──────────────────────────────────────────────┘
 ```
 
@@ -59,7 +57,6 @@ Key design decisions:
 | `src/agent/` | Controller (loop, barge-in, proactive events), tool executor, context builder |
 | `src/voice/` | Deepgram streaming STT + browser fallback, Murf TTS + browser fallback, language state |
 | `shared/languages.ts` | Per-language Murf locale, Deepgram model/language and browser fallback locale |
-| `src/revrag/` | RevRag SDK integration and context sync |
 
 ## Run locally
 
@@ -73,7 +70,7 @@ npm install
 cp .env.example .env.local
 ```
 
-Fill in `.env.local` (Anthropic, Deepgram, Murf, and the RevRag key), then:
+Fill in `.env.local` (Anthropic, Deepgram, Murf), then:
 
 ```bash
 npm run dev
@@ -104,12 +101,11 @@ npx vercel deploy --prod
 | `ANTHROPIC_API_KEY` | server | Agent reasoning and tool calling (Claude) |
 | `DEEPGRAM_API_KEY` | server | Speech-to-text (browser gets 60s tokens only) |
 | `MURF_API_KEY` | server | Text-to-speech |
-| `VITE_REVRAG_API_KEY` | client | RevRag In-App Agent SDK key |
 | `ANTHROPIC_MODEL` | server, optional | Defaults to `claude-opus-5-5` |
 | `AGENT_EFFORT` | server, optional | `low` (default) / `medium` / `high` |
 | `MURF_VOICE_ID`, `MURF_MODEL` | server, optional | Defaults `hi-IN-khyati`, `FALCON` |
 
-The **Status** pill in the header shows which providers are live and how many context events have reached RevRag.
+The **Status** pill in the header shows which providers are live.
 
 ## Known limitations
 

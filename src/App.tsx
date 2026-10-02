@@ -8,7 +8,6 @@ import { EligibilityPage } from './pages/Eligibility';
 import { ReviewPage } from './pages/Review';
 import { StepPage } from './pages/StepPage';
 import { SubmittedPage } from './pages/Submitted';
-import { RevragLayer } from './revrag/RevragLayer';
 import { bindRouter } from './state/actions';
 
 /** Lets the agent (outside React) navigate with the real router. */
@@ -28,7 +27,6 @@ export default function App() {
   return (
     <BrowserRouter>
       <RouterBridge />
-      <RevragLayer>
         <div className="min-h-dvh lg:pr-[400px]">
           <Header />
           <main className="mx-auto w-full max-w-3xl px-4 pb-40 pt-6 sm:px-6 lg:pb-16">
@@ -48,7 +46,6 @@ export default function App() {
           </main>
         </div>
         <AgentPanel />
-      </RevragLayer>
     </BrowserRouter>
   );
 }

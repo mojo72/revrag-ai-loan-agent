@@ -33,7 +33,7 @@ function Orb({ status, micOn, size = 'lg' }: { status: Status; micOn: boolean; s
 }
 
 export function AgentPanel() {
-  const { status, panelOpen, micOn, interim, items, copilot, sttProvider } = useAgent();
+  const { status, panelOpen, micOn, interim, items, sttProvider } = useAgent();
   const [text, setText] = useState('');
   const lang = useLanguage();
   const listRef = useRef<HTMLDivElement>(null);
@@ -79,7 +79,7 @@ export function AgentPanel() {
             <span className="grid size-10 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-900 font-display font-bold text-white">S</span>
             <div>
               <p className="font-semibold leading-tight">Sara</p>
-              <p className="text-xs text-muted">AI Relationship Manager{copilot ? ' · RevRag co-pilot mode' : ''}</p>
+              <p className="text-xs text-muted">AI Relationship Manager · powered by Claude</p>
             </div>
           </div>
           <div className="flex items-center gap-1">

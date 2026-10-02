@@ -1,13 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { agent, useAgent } from '../agent/controller';
-import { useRevrag } from '../revrag/RevragLayer';
 
-// Small "system status" popover: lets reviewers see which providers are live and what is flowing to RevRag.
+// Small "system status" popover: lets reviewers see which providers are live.
 export function StatusBadge() {
   const [open, setOpen] = useState(false);
   const providers = useAgent((s) => s.providers);
   const sttProvider = useAgent((s) => s.sttProvider);
-  const rv = useRevrag();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -17,12 +15,11 @@ export function StatusBadge() {
     return () => document.removeEventListener('mousedown', close);
   }, []);
 
-  const allGood = providers?.llm && providers.stt && providers.tts && rv.initialized;
+  const allGood = providers?.llm && providers.stt && providers.tts;
   const rows: [string, boolean | null, string][] = [
     ['Claude (agent brain)', providers?.llm ?? null, providers?.llm ? 'configured' : 'missing key'],
     ['Deepgram (speech-to-text)', providers?.stt ?? null, sttProvider === 'browser' ? 'using browser fallback' : providers?.stt ? 'configured' : 'browser fallback'],
     ['Murf (text-to-speech)', providers?.tts ?? null, providers?.tts ? 'configured' : 'browser fallback'],
-    ['RevRag In-App Agent', rv.configured ? rv.initialized : false, !rv.configured ? 'no API key' : rv.error ? `error: ${rv.error}` : rv.initialized ? (rv.callActive ? 'call live · co-pilot on' : 'initialised') : 'initialising…'],
   ];
 
   return (
@@ -42,12 +39,6 @@ export function StatusBadge() {
               </li>
             ))}
           </ul>
-          {rv.configured && (
-            <p className="mt-3 border-t border-line pt-2 text-xs text-muted">
-              Context events sent to RevRag: {rv.eventsSent}
-              {rv.lastEvent ? ` · last: ${rv.lastEvent}` : ''}
-            </p>
-          )}
         </div>
       )}
     </div>

@@ -40,7 +40,6 @@ interface AgentUi {
   items: TranscriptItem[];
   providers: Providers | null;
   sttProvider: 'deepgram' | 'browser' | null;
-  copilot: boolean;
   busy: boolean;
 }
 
@@ -52,7 +51,6 @@ export const useAgent = create<AgentUi>(() => ({
   items: [],
   providers: null,
   sttProvider: null,
-  copilot: false,
   busy: false,
 }));
 
@@ -99,7 +97,7 @@ class AgentController {
       }
     });
     bus.on((e) => {
-      if (!this.started || useAgent.getState().copilot) return;
+      if (!this.started) return;
       if (e.type === 'validation_failed' && e.source === 'user')
         this.handle(`<app_event>The customer clicked Continue on "${STEP_BY_ID[e.step].title}" but it was blocked: ${e.problems.join(' ')}</app_event>`, 'event');
       if (e.type === 'eligibility_checked' && e.source === 'user')
@@ -133,10 +131,10 @@ class AgentController {
   }
 
   /** Start a voice session. Must be called from a click (unlocks audio + mic permission). */
-  async start(opts: { copilot?: boolean } = {}) {
+  async start() {
     if (this.started) return;
     this.speaker.unlock();
-    useAgent.setState({ panelOpen: true, status: 'connecting', copilot: !!opts.copilot });
+    useAgent.setState({ panelOpen: true, status: 'connecting' });
     const p = await this.loadProviders();
     this.speaker.setMurf(p.tts);
     this.started = true;
@@ -146,7 +144,7 @@ class AgentController {
     }
     await this.startMic(p);
     this.refreshStatus();
-    if (!opts.copilot) this.greet();
+    this.greet();
   }
 
   private async startMic(p: Providers) {
@@ -188,7 +186,7 @@ class AgentController {
     this.stt = undefined;
     this.speaker.stop();
     this.started = false;
-    useAgent.setState({ micOn: false, interim: '', sttProvider: null, copilot: false });
+    useAgent.setState({ micOn: false, interim: '', sttProvider: null });
     this.refreshStatus();
   }
 
@@ -208,17 +206,6 @@ class AgentController {
 
   interrupt() {
     this.speaker.stop();
-  }
-
-  setCopilot(on: boolean) {
-    useAgent.setState({ copilot: on });
-    if (on) {
-      this.speaker.stop();
-      if (!this.started) void this.start({ copilot: true });
-      push('event', 'RevRag voice agent connected. Sara is now the silent action co-pilot.');
-    } else if (this.started) {
-      push('event', 'RevRag call ended. Sara is back on voice.');
-    }
   }
 
   private greet() {
@@ -243,7 +230,7 @@ class AgentController {
 
   private say(text: string) {
     push('agent', text);
-    if (!useAgent.getState().copilot) this.speaker.speak(text);
+    this.speaker.speak(text);
   }
 
   private isEcho(text: string) {
@@ -294,13 +281,12 @@ class AgentController {
   private async run(userText: string) {
     useAgent.setState({ busy: true });
     this.refreshStatus();
-    const copilot = useAgent.getState().copilot;
     const base = this.messages.length;
     const carried = this.deferred;
     this.deferred = [];
     this.messages.push({
       role: 'user',
-      content: [...carried, { type: 'text', text: buildContext({ voiceMuted: copilot }) }, { type: 'text', text: userText }],
+      content: [...carried, { type: 'text', text: buildContext() }, { type: 'text', text: userText }],
     });
 
     let speakOnly = false;
@@ -353,7 +339,7 @@ class AgentController {
           this.deferred = results;
           break;
         }
-        this.messages.push({ role: 'user', content: [...results, { type: 'text', text: buildContext({ voiceMuted: copilot }) }] });
+        this.messages.push({ role: 'user', content: [...results, { type: 'text', text: buildContext() }] });
       }
     } catch (e) {
       console.error(e);

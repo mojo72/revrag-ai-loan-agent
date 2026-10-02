@@ -1,4 +1,4 @@
-// Tiny typed event bus: app events the agent (and the RevRag context sync) react to.
+// Tiny typed event bus: app events the agent reacts to.
 
 import type { EligibilityResult } from '../../shared/finance';
 import type { StepId } from '../../shared/schema';

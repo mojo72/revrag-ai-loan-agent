@@ -22,6 +22,5 @@ Focus only on the agent and what it does. No architecture or feedback talk. Reco
 | 5:20 | "Show me my bank details." | Scrolls to and highlights the bank section of the review. |
 | 5:35 | Sara asks for consents. "Yes, I agree to both." Then "Yes, submit it." | Consents tick, application submits, ID spoken. |
 | 6:00 | "What happens next, and how long will approval take?" | Post-submission steps from the confirmation screen context. |
-| 6:20 | Optional: open the RevRag widget (bottom-left) and start a call; say "set my loan amount to 4 lakh" on a new application. | RevRag agent talks, Sara co-pilot operates the form silently. |
 
 Tips: speak naturally, pause briefly after each request, and press Esc to interrupt Sara if she is mid-sentence.
