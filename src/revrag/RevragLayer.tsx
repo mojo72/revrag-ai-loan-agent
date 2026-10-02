@@ -129,12 +129,40 @@ function ContextSync() {
   return null;
 }
 
+/**
+ * Workaround for a RevRag SDK 1.4.4 bug: when the dashboard saves the orb avatar with an empty
+ * `avatarUrl` (""), the SDK only falls back to its built-in orb for a *missing* URL (`??`), so the
+ * floating button renders empty (tooltip visible, no icon). Removing the empty string lets the SDK's
+ * own default orb show. Runs on the SDK's stored initialize data; a no-op once the avatar is set.
+ */
+function fixEmptyAvatar() {
+  try {
+    const KEY = 'embed_react_initialize_data';
+    const raw = sessionStorage.getItem(KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    const avatar = data?.widget_config?.agentAvatar;
+    if (!avatar) return;
+    let changed = false;
+    for (const k of ['avatarUrl', 'avatarImage'] as const) {
+      if (avatar[k] === '') {
+        delete avatar[k];
+        changed = true;
+      }
+    }
+    if (changed) sessionStorage.setItem(KEY, JSON.stringify(data));
+  } catch {
+    /* storage unavailable or unexpected shape: leave the SDK untouched */
+  }
+}
+
 function usePath() {
   return useLocation().pathname;
 }
 
 function Initialised({ children }: { children: ReactNode }) {
   const { isInitialized, error } = useInitialize(API_KEY!);
+  if (isInitialized) fixEmptyAvatar();
   useEffect(() => {
     useRevrag.setState({ initialized: !!isInitialized, error: error ? String(error) : null });
   }, [isInitialized, error]);
