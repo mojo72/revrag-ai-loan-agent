@@ -1,40 +1,61 @@
-// RevRag In-App Agent integration (SDK side).
-// - Initialises the official SDK (`useInitialize`) and identifies the customer (USER_DATA).
-// - Streams application context to RevRag: SCREEN_VIEW on navigation, FORM_STATE on edits,
-//   CUSTOM_EVENT / ANALYTICS_DATA for milestones and every action the RevRag agent performs.
-// The voice call itself, and RevRag's Action Intelligence protocol on web, live in call.ts.
+// RevRag In-App Agent, integrated as documented in https://docs.revrag.ai/embed/integration/react
+// - useInitialize(apiKey) once at the root.
+// - <EmbedProvider> wraps the app; it tracks the route (usePathHook) and renders RevRag's own
+//   floating agent button. Tapping it starts the RevRag voice agent.
+// - USER_DATA is sent first (with app_user_id), then context as CUSTOM_EVENT / ANALYTICS_DATA,
+//   the event keys the docs allow for manual use.
+// - embedEvent.addCallback listens for agent_start / agent_end.
 
-import { EventKeys, embedEvent, useInitialize } from '@revrag-ai/embed-react';
+import { EmbedProvider, EventKeys, embedEvent, useInitialize } from '@revrag-ai/embed-react';
+import '@revrag-ai/embed-react/style.css';
 import { useEffect, useRef, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { create } from 'zustand';
 import { FIELDS, displayValue, isEmpty, maskSensitive, stepForPath } from '../../shared/schema';
-import { completedSteps } from '../state/journey';
 import { bus } from '../state/bus';
+import { completedSteps } from '../state/journey';
 import { useApp } from '../state/store';
-import { REVRAG_API_KEY as API_KEY, appUserId } from './identity';
 
-export const useRevrag = create<{ configured: boolean; initialized: boolean; error: string | null; eventsSent: number; lastEvent: string | null }>(() => ({
-  configured: !!API_KEY,
-  initialized: false,
-  error: null,
-  eventsSent: 0,
-  lastEvent: null,
-}));
+const API_KEY = import.meta.env.VITE_REVRAG_API_KEY as string | undefined;
 
-let identified = false;
+export const useRevrag = create<{
+  configured: boolean;
+  initialized: boolean;
+  identified: boolean;
+  error: string | null;
+  callActive: boolean;
+  eventsSent: number;
+  lastEvent: string | null;
+}>(() => ({ configured: !!API_KEY, initialized: false, identified: false, error: null, callActive: false, eventsSent: 0, lastEvent: null }));
+
+/** Anonymous, stable per-browser customer id (the docs require an app_user_id in USER_DATA). */
+function appUserId(): string {
+  try {
+    let id = localStorage.getItem('bliss-user-id');
+    if (!id) {
+      id = 'guest-' + crypto.randomUUID().slice(0, 8);
+      localStorage.setItem('bliss-user-id', id);
+    }
+    return id;
+  } catch {
+    return 'guest-anon';
+  }
+}
+
 async function send(eventKey: string, data: Record<string, unknown>) {
-  if (!useRevrag.getState().initialized) return;
-  if (!identified && eventKey !== EventKeys.USER_DATA) return;
+  const s = useRevrag.getState();
+  if (!s.initialized) return;
+  // Docs: USER_DATA must be sent before any other event, or the event is rejected.
+  if (!s.identified && eventKey !== EventKeys.USER_DATA) return;
   try {
     const r = await embedEvent.event({ eventKey: eventKey as never, data: { app_user_id: appUserId(), ...data } });
-    useRevrag.setState((s) => ({ eventsSent: s.eventsSent + 1, lastEvent: `${eventKey}${r?.success === false ? ' (failed)' : ''}` }));
+    useRevrag.setState((st) => ({ eventsSent: st.eventsSent + 1, lastEvent: `${data.event_name ?? eventKey}${r?.success === false ? ' (failed)' : ''}` }));
   } catch (e) {
     useRevrag.setState({ lastEvent: `${eventKey} error: ${String(e)}` });
   }
 }
 
-function formSnapshot() {
+function formValues() {
   const d = useApp.getState().data;
   return Object.fromEntries(
     Object.keys(FIELDS)
@@ -43,28 +64,30 @@ function formSnapshot() {
   );
 }
 
+function screenEvent(pathname: string) {
+  const step = stepForPath(pathname);
+  return { event_name: 'screen_view', screen: step.id, screen_title: step.title, path: pathname };
+}
+
 function ContextSync() {
   const { pathname } = useLocation();
-
-  // Identify the user once the SDK is ready.
   const initialized = useRevrag((s) => s.initialized);
+  const identified = useRevrag((s) => s.identified);
+
+  // 1. Identify the customer as soon as the SDK is ready.
   useEffect(() => {
-    if (!initialized || identified) return;
-    void send(EventKeys.USER_DATA, { name: (useApp.getState().data.full_name as string) ?? 'Guest', channel: 'web', app: 'bliss-loan-demo' }).then(() => {
-      identified = true;
-      // Events before identity are dropped by RevRag, so (re)send the screen the customer is on.
-      const step = stepForPath(window.location.pathname);
-      void send('screen_view', { screen: step.id, screen_title: step.title, path: window.location.pathname });
-    });
+    if (!initialized || useRevrag.getState().identified) return;
+    void send(EventKeys.USER_DATA, { name: (useApp.getState().data.full_name as string) ?? 'Guest', channel: 'web', app: 'bliss-loan-demo' }).then(() =>
+      useRevrag.setState({ identified: true }),
+    );
   }, [initialized]);
 
-  // Screen views.
+  // 2. Which screen the customer is on.
   useEffect(() => {
-    const step = stepForPath(pathname);
-    void send('screen_view', { screen: step.id, screen_title: step.title, path: pathname });
-  }, [pathname, initialized]);
+    if (identified) void send(EventKeys.CUSTOM_EVENT, screenEvent(pathname));
+  }, [pathname, identified]);
 
-  // Form state, debounced.
+  // 3. What has been filled in (debounced).
   const timer = useRef<number>(undefined);
   useEffect(
     () =>
@@ -72,26 +95,44 @@ function ContextSync() {
         if (s.data === prev.data) return;
         clearTimeout(timer.current);
         timer.current = window.setTimeout(() => {
-          void send('form_state', { screen: stepForPath(window.location.pathname).id, completed_steps: completedSteps(), values: formSnapshot() });
+          void send(EventKeys.CUSTOM_EVENT, {
+            event_name: 'form_state',
+            screen: stepForPath(window.location.pathname).id,
+            completed_steps: completedSteps(),
+            values: formValues(),
+          });
         }, 1500);
       }),
     [],
   );
 
-  // Milestones and agent actions.
+  // 4. Milestones.
   useEffect(
     () =>
       bus.on((e) => {
         if (e.type === 'eligibility_checked')
-          void send(EventKeys.CUSTOM_EVENT, { event_name: 'eligibility_checked', eligible: e.result.eligible, max_amount: e.result.maxEligibleAmount, rate: e.result.indicativeRate, by: e.source });
-        if (e.type === 'submitted') void send(EventKeys.CUSTOM_EVENT, { event_name: 'application_submitted', application_id: e.applicationId, by: e.source });
-        if (e.type === 'validation_failed') void send(EventKeys.ANALYTICS_DATA, { event_name: 'validation_failed', screen: e.step, problems: e.problems.length });
-        if (e.type === 'agent_action') void send(EventKeys.ANALYTICS_DATA, { event_name: 'agent_action', tool: e.tool, summary: e.summary });
+          void send(EventKeys.CUSTOM_EVENT, { event_name: 'eligibility_checked', eligible: e.result.eligible, max_amount: e.result.maxEligibleAmount, rate: e.result.indicativeRate });
+        if (e.type === 'submitted') void send(EventKeys.CUSTOM_EVENT, { event_name: 'application_submitted', application_id: e.applicationId });
+        if (e.type === 'validation_failed') void send(EventKeys.ANALYTICS_DATA, { event_name: 'validation_failed', screen: e.step, problems: e.problems });
       }),
     [],
   );
 
+  // 5. Agent call lifecycle (auto-tracked by the SDK, emitted locally).
+  useEffect(() => {
+    const cb = (event: { type: string }) => {
+      if (event.type === EventKeys.AGENT_CONNECTED) useRevrag.setState({ callActive: true });
+      if (event.type === EventKeys.AGENT_DISCONNECTED) useRevrag.setState({ callActive: false });
+    };
+    embedEvent.addCallback(cb);
+    return () => embedEvent.removeCallback(cb);
+  }, []);
+
   return null;
+}
+
+function usePath() {
+  return useLocation().pathname;
 }
 
 function Initialised({ children }: { children: ReactNode }) {
@@ -100,13 +141,11 @@ function Initialised({ children }: { children: ReactNode }) {
     useRevrag.setState({ initialized: !!isInitialized, error: error ? String(error) : null });
   }, [isInitialized, error]);
 
-  // Never block the loan app on the SDK. The voice call is started from Sara's panel (call.ts),
-  // so the SDK's own floating button is not mounted: one entry point, one conversation.
   return (
-    <>
+    <EmbedProvider appVersion="1.0.0" usePathHook={usePath} embedButtonProps={{ positioning: 'fixed' }} embedButtonPosition={{ bottom: 24, right: 24 }}>
       {children}
       <ContextSync />
-    </>
+    </EmbedProvider>
   );
 }
 

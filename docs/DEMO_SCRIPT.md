@@ -2,11 +2,11 @@
 
 Focus only on the agent and what it does. No architecture or feedback talk. Record in Chrome with system audio on so Sara's voice is captured. Start from a fresh tab (application data lives in session storage).
 
-Sara runs on the RevRag agent. Today she guides by voice and you fill the form as she instructs. If RevRag enables Action Intelligence for the agent, she fills it herself and the action timeline in her panel shows each step; the script works for both.
+Sara runs on the RevRag agent through RevRag's floating agent button. She guides by voice and you fill the form as she instructs.
 
 | Time | You do / say | What the viewer should see |
 |---|---|---|
-| 0:00 | Open the live link. Click **Talk to Sara** and allow the microphone. | The RevRag voice call connects; Sara greets you; the panel shows the live transcript. |
+| 0:00 | Open the live link. Tap RevRag's agent button in the bottom-right corner and allow the microphone. | The RevRag voice call connects and Sara greets you. |
 | 0:20 | "What kinds of loans do you have?" | Sara lists the four products briefly. |
 | 0:40 | "What's the interest rate on a personal loan, and how long can I take it for?" | Rate range and 12 to 72 months, from the knowledge base. |
 | 1:00 | **"I want a 5 lakh personal loan for 3 years."** | Sara confirms and tells you what to fill on Loan details. Fill product, amount, tenure as she says. |
@@ -21,4 +21,4 @@ Sara runs on the RevRag agent. Today she guides by voice and you fill the form a
 | 5:20 | Sara asks for consents; say yes, tick both boxes, and submit. | Confirmation screen with the application ID. |
 | 5:50 | "What happens next, and how long will approval take?" | The post-submission steps and timelines. |
 
-Tips: speak naturally and pause briefly after each request; you can talk over Sara to interrupt her. Open the Status pill before recording to confirm the RevRag SDK is initialised; during the call it shows the agent's state and the screen snapshots sent.
+Tips: speak naturally and pause briefly after each request; you can talk over Sara to interrupt her. Open the Status pill before recording to confirm the RevRag SDK is initialised and the customer is identified.

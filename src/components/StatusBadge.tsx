@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { useCall } from '../revrag/call';
 import { useRevrag } from '../revrag/RevragLayer';
 
-// "System status" popover: shows reviewers what RevRag is doing live (SDK, call, Action Intelligence).
+// "System status" popover: what the RevRag SDK is doing live.
 export function StatusBadge() {
   const [open, setOpen] = useState(false);
   const rv = useRevrag();
-  const { status, stats } = useCall();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -15,11 +13,10 @@ export function StatusBadge() {
     return () => document.removeEventListener('mousedown', close);
   }, []);
 
-  const inCall = status !== 'off' && status !== 'connecting';
   const rows: [string, boolean, string][] = [
     ['RevRag SDK', rv.initialized, !rv.configured ? 'no API key' : rv.error ? `error: ${rv.error}` : rv.initialized ? 'initialised' : 'initialising…'],
-    ['RevRag voice agent', inCall, inCall ? `on call · ${status}` : status === 'connecting' ? 'connecting…' : 'idle'],
-    ['Action Intelligence', stats.missions > 0, `${stats.snapshots} screen snapshots sent · ${stats.missions} missions · ${stats.steps} actions`],
+    ['Customer identified', rv.identified, rv.identified ? 'USER_DATA sent' : 'waiting for SDK'],
+    ['RevRag agent call', rv.callActive, rv.callActive ? 'connected' : 'idle (tap the agent button)'],
     ['Context events', rv.eventsSent > 0, `${rv.eventsSent} sent${rv.lastEvent ? ` · last: ${rv.lastEvent}` : ''}`],
   ];
 

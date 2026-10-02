@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { emiBreakdown } from '../../shared/finance';
 import { PRODUCTS, PRODUCT_IDS, formatINR, type ProductId } from '../../shared/products';
-import { call, useCall } from '../revrag/call';
+import { useRevrag } from '../revrag/RevragLayer';
 import { useHighlight } from '../components/useHighlight';
 import { goTo } from '../state/actions';
 import { useApp } from '../state/store';
@@ -10,7 +10,7 @@ const ICON: Record<ProductId, string> = { personal: '◎', home: '⌂', car: '�
 
 export function DiscoverPage() {
   const setField = useApp((s) => s.setField);
-  const active = useCall((s) => s.status !== 'off');
+  const callActive = useRevrag((s) => s.callActive);
   const pointedProducts = useHighlight('products');
 
   return (
@@ -24,20 +24,15 @@ export function DiscoverPage() {
           Your AI relationship manager, powered by RevRag, answers your questions and guides you through eligibility and the application, by voice.
         </p>
         <div className="relative mt-6 flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={() => void call.start()}
-            disabled={active}
-            className="flex items-center gap-2 rounded-2xl bg-white px-5 py-3 font-semibold text-brand-900 shadow-lg transition hover:bg-brand-50 disabled:opacity-70"
-          >
-            <span className="grid size-6 place-items-center rounded-full bg-brand-600 text-xs text-white">●</span>
-            {active ? 'Sara is on the call' : 'Talk to Sara'}
-          </button>
-          <button type="button" onClick={() => goTo('loan')} className="rounded-2xl border border-white/30 px-5 py-3 font-semibold text-white hover:bg-white/10">
-            Apply on my own
+          <button type="button" onClick={() => goTo('loan')} className="rounded-2xl bg-white px-5 py-3 font-semibold text-brand-900 shadow-lg transition hover:bg-brand-50">
+            Start application
           </button>
         </div>
-        <p className="relative mt-4 text-xs text-brand-200">Try: “I want a 5 lakh personal loan for 3 years”</p>
+        <p className="relative mt-4 flex items-center gap-2 text-sm text-brand-100">
+          <span className="grid size-6 place-items-center rounded-full bg-white/15 text-xs">↘</span>
+          {callActive ? 'Sara is on the call.' : 'To talk to Sara, tap the agent button in the bottom-right corner.'}
+        </p>
+        <p className="relative mt-1 text-xs text-brand-200">Try: “I want a 5 lakh personal loan for 3 years”</p>
       </section>
 
       <h2 className="mt-10 font-display text-2xl font-bold">Our loans</h2>

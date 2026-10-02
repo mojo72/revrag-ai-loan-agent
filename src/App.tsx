@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { AgentPanel } from './components/AgentPanel';
 import { Header } from './components/Header';
 import { DiscoverPage } from './pages/Discover';
 import { DocumentsPage } from './pages/Documents';
@@ -29,7 +28,7 @@ export default function App() {
     <BrowserRouter>
       <RouterBridge />
       <RevragLayer>
-        <div className="min-h-dvh lg:pr-[400px]">
+        <div className="min-h-dvh">
           <Header />
           <main className="mx-auto w-full max-w-3xl px-4 pb-40 pt-6 sm:px-6 lg:pb-16">
             <Routes>
@@ -47,7 +46,6 @@ export default function App() {
             </Routes>
           </main>
         </div>
-        <AgentPanel />
       </RevragLayer>
     </BrowserRouter>
   );
