@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
 import { ageFromDob, checkEligibility, type CreditBand, type EligibilityResult } from '../../shared/finance';
 import type { ProductId } from '../../shared/products';
 import { FIELDS, type AppData, type FieldValue, type StepId } from '../../shared/schema';
@@ -37,9 +36,15 @@ export function eligibilityInputsKey(d: AppData) {
 
 const initialData: AppData = { product: 'personal', existing_emi: undefined, permanent_same: true, emi_autodebit: true };
 
-export const useApp = create<AppState>()(
-  persist(
-    (set, get) => ({
+// In memory only: every fresh launch or refresh starts a new, empty application.
+// Remove copies saved by earlier versions of the app, which persisted to session storage.
+try {
+  sessionStorage.removeItem('bliss-application');
+} catch {
+  /* storage unavailable */
+}
+
+export const useApp = create<AppState>()((set, get) => ({
       data: initialData,
       eligibility: null,
       applicationId: null,
@@ -97,14 +102,7 @@ export const useApp = create<AppState>()(
       },
       reset: () =>
         set({ data: initialData, eligibility: null, applicationId: null, submittedAt: null, attempted: {}, agentTouched: {}, manualChanges: [] }),
-    }),
-    {
-      name: 'bliss-application',
-      storage: createJSONStorage(() => sessionStorage),
-      partialize: (s) => ({ data: s.data, eligibility: s.eligibility, applicationId: s.applicationId, submittedAt: s.submittedAt }),
-    },
-  ),
-);
+}));
 
 /** Eligibility result only counts if it was computed from the current inputs. */
 export function currentEligibility(s: Pick<AppState, 'eligibility' | 'data'>) {

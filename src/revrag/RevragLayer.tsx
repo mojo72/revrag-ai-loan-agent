@@ -28,18 +28,16 @@ export const useRevrag = create<{
   lastEvent: string | null;
 }>(() => ({ configured: !!API_KEY, initialized: false, identified: false, error: null, callActive: false, eventsSent: 0, lastEvent: null }));
 
-/** Anonymous, stable per-browser customer id (the docs require an app_user_id in USER_DATA). */
+/** Anonymous customer id (the docs require an app_user_id in USER_DATA). A new one per page load, so
+ *  every fresh launch or refresh is a new customer session and RevRag does not recall old form data. */
+const SESSION_USER_ID = 'guest-' + crypto.randomUUID().slice(0, 8);
+try {
+  localStorage.removeItem('bliss-user-id'); // stable id stored by earlier versions
+} catch {
+  /* storage unavailable */
+}
 function appUserId(): string {
-  try {
-    let id = localStorage.getItem('bliss-user-id');
-    if (!id) {
-      id = 'guest-' + crypto.randomUUID().slice(0, 8);
-      localStorage.setItem('bliss-user-id', id);
-    }
-    return id;
-  } catch {
-    return 'guest-anon';
-  }
+  return SESSION_USER_ID;
 }
 
 async function send(eventKey: string, data: Record<string, unknown>) {

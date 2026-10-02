@@ -1,6 +1,6 @@
 # Demo video script (5 to 7 minutes)
 
-Focus only on the agent and what it does. No architecture or feedback talk. Record in Chrome with system audio on so Sara's voice is captured. Start from a fresh tab (application data lives in session storage).
+Focus only on the agent and what it does. No architecture or feedback talk. Record in Chrome with system audio on so Sara's voice is captured. Every refresh starts a fresh, empty application.
 
 Sara runs on the RevRag agent through RevRag's floating agent button. She guides by voice and you fill the form as she instructs.
 
